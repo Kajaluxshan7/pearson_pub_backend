@@ -3,14 +3,15 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { AdminsModule } from './admins/admins.module';
+
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // Makes the configuration available globally
-      envFilePath: '.development.env', // Specify the path to your environment file
+      envFilePath: '.develop.env', // Specify the path to your environment file
     }),
     TypeOrmModule.forRootAsync({ // Use forRootAsync for async configuration
       imports: [ConfigModule], // Import ConfigModule here
@@ -26,8 +27,8 @@ import { AuthModule } from './auth/auth.module';
       }),
       inject: [ConfigService], // Inject ConfigService
     }),
-    UserModule,
     AuthModule,
+    AdminsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

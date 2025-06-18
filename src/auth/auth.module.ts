@@ -9,7 +9,8 @@ import { EmailService } from './email.service';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
-import { User } from '../user/entities/user.entity';
+import { Admin } from '../admins/entities/admin.entity';
+import { AdminInvitation } from './entities/admin-invitation.entity';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { User } from '../user/entities/user.entity';
       }),
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([Admin, AdminInvitation]),
   ],
   controllers: [AuthController],
   providers: [AuthService, EmailService, LocalStrategy, JwtStrategy, GoogleStrategy],

@@ -24,14 +24,14 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     done: VerifyCallback,
   ): Promise<any> {
     const { id, name, emails, photos } = profile;
-    const user = {
+    const admin = {
       google_id: id,
       email: emails[0].value,
       first_name: name.givenName,
       avatar_url: photos[0].value,
     };
 
-    const validatedUser = await this.authService.validateGoogleUser(user);
-    done(null, validatedUser);
+    const validatedAdmin = await this.authService.validateGoogleAdmin(admin);
+    done(null, validatedAdmin);
   }
 }

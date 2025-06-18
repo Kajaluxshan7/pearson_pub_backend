@@ -1,13 +1,19 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
-@Entity('users')
-export class User {
-  @PrimaryGeneratedColumn('uuid') // <--- Changed to 'uuid' strategy
-  id: string; // <--- Changed type to string
+export enum AdminRole {
+  SUPERADMIN = 'superadmin',
+  ADMIN = 'admin'
+}
+
+@Entity('admins')
+export class Admin {
+  @PrimaryGeneratedColumn('uuid')
+  id: string; 
+  
   @Column({ unique: true, nullable: false })
   email: string;
 
-  @Column({ nullable: true }) // Made nullable for Google OAuth users
+  @Column({ nullable: true })
   password_hash: string;
 
   @Column({ nullable: true })
@@ -24,6 +30,13 @@ export class User {
 
   @Column({ type: 'text', nullable: true })
   address: string;
+
+  @Column({ 
+    type: 'enum', 
+    enum: AdminRole, 
+    default: AdminRole.ADMIN 
+  })
+  role: AdminRole;
 
   @Column({ default: false })
   is_verified: boolean;
