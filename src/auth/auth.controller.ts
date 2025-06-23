@@ -31,19 +31,23 @@ export class AuthController {
   @Get('verify-email')
   async verifyEmail(@Query('token') token: string) {
     return await this.authService.verifyEmail(token);
-  }@UseGuards(LocalAuthGuard)
+  }
+  @UseGuards(LocalAuthGuard)
   @Post('login')
-  async login(@Request() req, @Response({ passthrough: true }) res: ExpressResponse) {
+  async login(
+    @Request() req,
+    @Response({ passthrough: true }) res: ExpressResponse,
+  ) {
     // Passport sets authenticated admin in req.user by convention
     const admin = req.user;
-    
+
     // Validate that admin exists (should be set by LocalAuthGuard)
     if (!admin) {
       throw new UnauthorizedException('Authentication failed');
     }
-    
+
     const accessToken = this.authService.generateAuthCookie(admin);
-    
+
     // Set HTTP-only cookie
     res.cookie('access_token', accessToken, {
       httpOnly: true,
@@ -51,10 +55,9 @@ export class AuthController {
       sameSite: 'strict',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
-
     return {
       message: 'Login successful',
-      admin: req.admin,
+      admin: admin,
     };
   }
   @Get('google')
@@ -67,7 +70,7 @@ export class AuthController {
   @UseGuards(GoogleAuthGuard)
   async googleAuthCallback(@Request() req, @Response() res: ExpressResponse) {
     const accessToken = this.authService.generateAuthCookie(req.admin);
-    
+
     // Set HTTP-only cookie
     res.cookie('access_token', accessToken, {
       httpOnly: true,
@@ -99,7 +102,9 @@ export class AuthController {
   }
 
   @Post('validate-invitation')
-  async validateInvitation(@Body() validateInvitationDto: ValidateInvitationDto) {
+  async validateInvitation(
+    @Body() validateInvitationDto: ValidateInvitationDto,
+  ) {
     return this.authService.validateInvitation(validateInvitationDto);
   }
 
