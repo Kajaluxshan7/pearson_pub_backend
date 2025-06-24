@@ -42,6 +42,7 @@ lerna-debug.log*
 .env.production.local
 .env.local
 .develop.env
+.env.example
 
 # temp directory
 .temp
@@ -61,3 +62,6 @@ create-superadmin.bat
 create-superadmin.ps1
 
 install-dependencies.js
+
+deploy.bat
+deploy.sh

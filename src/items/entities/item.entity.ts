@@ -9,13 +9,7 @@ import {
 } from 'typeorm';
 import { Category } from '../../categories/entities/category.entity';
 import { Admin } from '../../admins/entities/admin.entity';
-
-export enum ItemSize {
-  SMALL = 'small',
-  MEDIUM = 'medium',
-  LARGE = 'large',
-  EXTRA_LARGE = 'extra_large',
-}
+import { ItemsSizeEnum } from '../../common/enums';
 
 @Entity('items')
 export class Item {
@@ -43,14 +37,13 @@ export class Item {
 
   @Column({ type: 'text', array: true, default: '{}' })
   ingredients: string[];
-
   @Column({
     type: 'enum',
-    enum: ItemSize,
+    enum: ItemsSizeEnum,
     array: true,
     default: '{}',
   })
-  sizes: ItemSize[];
+  sizes: ItemsSizeEnum[];
 
   @Column({ type: 'text', array: true, default: '{}' })
   images: string[];

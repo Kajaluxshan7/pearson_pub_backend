@@ -90,14 +90,7 @@ export class AdminsController {
 
   @Patch(':id/toggle-status')
   @Roles(AdminRole.SUPERADMIN)
-  toggleStatus(
-    @Param('id') id: string,
-    @Request() req,
-  ) {
-    return this.adminsService.toggleStatus(
-      id,
-      req.user.id,
-      req.user.role,
-    );
+  toggleStatus(@Param('id') id: string, @Request() req) {
+    return this.adminsService.toggleStatus(id, req.user.id, req.user.role);
   }
 }

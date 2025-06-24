@@ -10,6 +10,10 @@ import { ItemsModule } from './items/items.module';
 import { AddonsModule } from './addons/addons.module';
 import { EventsModule } from './events/events.module';
 import { OperationHoursModule } from './operation-hours/operation-hours.module';
+import { SpecialsModule } from './specials/specials.module';
+import { WingSaucesModule } from './wing-sauces/wing-sauces.module';
+import { SubstituteSidesModule } from './substitute-sides/substitute-sides.module';
+import { ItemAddonsRelationsModule } from './item-addons-relations/item-addons-relations.module';
 
 @Module({
   imports: [
@@ -40,6 +44,10 @@ import { OperationHoursModule } from './operation-hours/operation-hours.module';
     AddonsModule,
     EventsModule,
     OperationHoursModule,
+    SpecialsModule,
+    WingSaucesModule,
+    SubstituteSidesModule,
+    ItemAddonsRelationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

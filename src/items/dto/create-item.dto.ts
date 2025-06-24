@@ -8,7 +8,7 @@ import {
   IsUUID,
   IsEnum,
 } from 'class-validator';
-import { ItemSize } from '../entities/item.entity';
+import { ItemsSizeEnum } from '../../common/enums';
 
 export class CreateItemDto {
   @IsString()
@@ -35,11 +35,10 @@ export class CreateItemDto {
   @IsOptional()
   @IsString({ each: true })
   ingredients?: string[];
-
   @IsArray()
   @IsOptional()
-  @IsEnum(ItemSize, { each: true })
-  sizes?: ItemSize[];
+  @IsEnum(ItemsSizeEnum, { each: true })
+  sizes?: ItemsSizeEnum[];
 
   @IsArray()
   @IsOptional()

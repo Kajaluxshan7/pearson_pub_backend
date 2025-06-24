@@ -159,16 +159,20 @@ export class AdminsService {
     if (filters.search) {
       queryBuilder.andWhere(
         '(admin.email ILIKE :search OR admin.first_name ILIKE :search OR admin.phone ILIKE :search)',
-        { search: `%${filters.search}%` }
+        { search: `%${filters.search}%` },
       );
     }
 
     if (filters.role) {
-      queryBuilder.andWhere('admin.role = :filterRole', { filterRole: filters.role });
+      queryBuilder.andWhere('admin.role = :filterRole', {
+        filterRole: filters.role,
+      });
     }
 
     if (filters.status !== undefined) {
-      queryBuilder.andWhere('admin.is_verified = :status', { status: filters.status });
+      queryBuilder.andWhere('admin.is_verified = :status', {
+        status: filters.status,
+      });
     }
 
     // Pagination
@@ -217,7 +221,7 @@ export class AdminsService {
     // Toggle the is_active status
     targetAdmin.is_active = !targetAdmin.is_active;
     await this.adminsRepository.save(targetAdmin);
-    
+
     return this.findOne(id);
   }
 }

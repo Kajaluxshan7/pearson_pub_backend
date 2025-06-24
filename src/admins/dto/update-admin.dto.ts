@@ -6,7 +6,7 @@ export class UpdateAdminDto extends PartialType(CreateAdminDto) {
   @IsOptional()
   @IsBoolean()
   is_active?: boolean;
-  
+
   @IsOptional()
   @IsBoolean()
   is_verified?: boolean;
