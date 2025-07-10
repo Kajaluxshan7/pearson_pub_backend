@@ -14,6 +14,8 @@ import { SpecialsModule } from './specials/specials.module';
 import { WingSaucesModule } from './wing-sauces/wing-sauces.module';
 import { SubstituteSidesModule } from './substitute-sides/substitute-sides.module';
 import { ItemAddonsRelationsModule } from './item-addons-relations/item-addons-relations.module';
+import { TasksModule } from './tasks/tasks.module';
+import { PublicApiModule } from './public-api/public-api.module';
 
 @Module({
   imports: [
@@ -48,6 +50,8 @@ import { ItemAddonsRelationsModule } from './item-addons-relations/item-addons-r
     WingSaucesModule,
     SubstituteSidesModule,
     ItemAddonsRelationsModule,
+    TasksModule,
+    PublicApiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

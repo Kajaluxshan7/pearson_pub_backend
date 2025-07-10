@@ -35,6 +35,7 @@ export class CreateItemDto {
   @IsOptional()
   @IsString({ each: true })
   ingredients?: string[];
+
   @IsArray()
   @IsOptional()
   @IsEnum(ItemsSizeEnum, { each: true })

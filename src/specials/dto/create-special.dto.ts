@@ -60,6 +60,6 @@ export class CreateSpecialDto {
   seasonal_end_date?: Date;
 
   @IsUUID()
-  @IsNotEmpty()
-  lastEditedByAdminId: string;
+  @IsOptional()
+  lastEditedByAdminId?: string;
 }

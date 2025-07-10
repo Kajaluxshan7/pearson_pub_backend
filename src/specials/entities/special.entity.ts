@@ -16,11 +16,11 @@ import { Admin } from '../../admins/entities/admin.entity';
 
 @Entity('specials')
 @Check(`
-  (special_type = 'daily' AND specials_day_id IS NOT NULL AND seasonal_start_date IS NULL AND seasonal_end_date IS NULL) OR
-  (special_type IN ('seasonal', 'latenight') AND specials_day_id IS NULL AND seasonal_start_date IS NOT NULL) OR
-  (menu_item_id IS NOT NULL AND category_id IS NULL) OR
-  (menu_item_id IS NULL AND category_id IS NOT NULL)
-`)
+    (special_type = 'daily' AND specials_day_id IS NOT NULL AND seasonal_start_date IS NULL AND seasonal_end_date IS NULL) OR
+    (special_type IN ('seasonal', 'latenight') AND specials_day_id IS NULL AND seasonal_start_date IS NOT NULL) OR
+    (menu_item_id IS NOT NULL AND category_id IS NULL) OR
+    (menu_item_id IS NULL AND category_id IS NOT NULL)
+  `)
 export class Special {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -31,8 +31,19 @@ export class AddonsController {
 
   @Post()
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  create(@Body() createAddonDto: CreateAddonDto, @Request() req) {
-    return this.addonsService.create(createAddonDto, req.user.id);
+  async create(@Body() createAddonDto: CreateAddonDto, @Request() req) {
+    try {
+      console.log('🔄 Addons Controller - Create request:', createAddonDto);
+      const result = await this.addonsService.create(
+        createAddonDto,
+        req.user.id,
+      );
+      console.log('✅ Addons Controller - Create successful');
+      return result;
+    } catch (error) {
+      console.error('❌ Addons Controller - Create error:', error);
+      throw error;
+    }
   }
 
   @Get()
@@ -65,7 +76,21 @@ export class AddonsController {
   }
   @Delete(':id')
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  remove(@Param('id') id: string) {
-    return this.addonsService.remove(id);
+  async remove(@Param('id') id: string) {
+    try {
+      console.log('🔄 Addons Controller - Delete request for ID:', id);
+      await this.addonsService.remove(id);
+      console.log('✅ Addons Controller - Delete successful');
+      return { message: 'Addon deleted successfully' };
+    } catch (error) {
+      console.error('❌ Addons Controller - Delete error:', error);
+      throw error;
+    }
+  }
+
+  @Post(':id/duplicate')
+  @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
+  duplicate(@Param('id') id: string, @Request() req) {
+    return this.addonsService.duplicate(id, req.user.id);
   }
 }

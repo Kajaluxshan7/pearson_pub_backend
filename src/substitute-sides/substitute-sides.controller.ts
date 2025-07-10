@@ -10,6 +10,7 @@ import {
   ParseUUIDPipe,
   ParseIntPipe,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { SubstituteSidesService } from './substitute-sides.service';
 import { CreateSubstituteSideDto } from './dto/create-substitute-side.dto';
@@ -28,8 +29,25 @@ export class SubstituteSidesController {
 
   @Post()
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  create(@Body() createSubstituteSideDto: CreateSubstituteSideDto) {
-    return this.substituteSidesService.create(createSubstituteSideDto);
+  async create(
+    @Body() createSubstituteSideDto: CreateSubstituteSideDto,
+    @Request() req,
+  ) {
+    try {
+      console.log(
+        '🔄 SubstituteSides Controller - Create request:',
+        createSubstituteSideDto,
+      );
+      const result = await this.substituteSidesService.create(
+        createSubstituteSideDto,
+        req.user.id,
+      );
+      console.log('✅ SubstituteSides Controller - Create successful');
+      return result;
+    } catch (error) {
+      console.error('❌ SubstituteSides Controller - Create error:', error);
+      throw error;
+    }
   }
 
   @Get()
@@ -50,16 +68,40 @@ export class SubstituteSidesController {
 
   @Patch(':id')
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  update(
+  async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateSubstituteSideDto: UpdateSubstituteSideDto,
+    @Request() req,
   ) {
-    return this.substituteSidesService.update(id, updateSubstituteSideDto);
+    try {
+      console.log('🔄 SubstituteSides Controller - Update request:', {
+        id,
+        updateSubstituteSideDto,
+      });
+      const result = await this.substituteSidesService.update(
+        id,
+        updateSubstituteSideDto,
+        req.user.id,
+      );
+      console.log('✅ SubstituteSides Controller - Update successful');
+      return result;
+    } catch (error) {
+      console.error('❌ SubstituteSides Controller - Update error:', error);
+      throw error;
+    }
   }
 
   @Delete(':id')
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.substituteSidesService.remove(id);
+  async remove(@Param('id', ParseUUIDPipe) id: string) {
+    try {
+      console.log('🔄 SubstituteSides Controller - Delete request for ID:', id);
+      await this.substituteSidesService.remove(id);
+      console.log('✅ SubstituteSides Controller - Delete successful');
+      return { message: 'Substitute side deleted successfully' };
+    } catch (error) {
+      console.error('❌ SubstituteSides Controller - Delete error:', error);
+      throw error;
+    }
   }
 }

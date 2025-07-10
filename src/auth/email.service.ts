@@ -68,13 +68,28 @@ export class EmailService {
       throw new Error('Failed to send verification email');
     }
   }
-  async sendAdminInvitationEmail(email: string, token: string, role: AdminRole): Promise<void> {
-    const invitationUrl = `${this.configService.get<string>('FRONTEND_URL') || 'https://localhost:3000'}/admin/setup-password?token=${token}`;
-    
+  async sendAdminInvitationEmail(
+    email: string,
+    token: string,
+    role: AdminRole,
+  ): Promise<void> {
+    // Use ADMIN_FRONTEND_URL for admin dashboard, fallback to FRONTEND_URL:3002, then localhost:3002
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    const adminFrontendUrl =
+      this.configService.get<string>('ADMIN_FRONTEND_URL') ||
+      (frontendUrl
+        ? frontendUrl.replace(':3000', ':3002')
+        : 'http://localhost:3002');
+    const invitationUrl = `${adminFrontendUrl}/setup-password?token=${token}`;
+
     // Read the HTML template
-    const templatePath = path.join(__dirname, 'templates', 'admin-invitation-email.html');
+    const templatePath = path.join(
+      __dirname,
+      'templates',
+      'admin-invitation-email.html',
+    );
     let htmlTemplate = '';
-    
+
     try {
       htmlTemplate = fs.readFileSync(templatePath, 'utf8');
     } catch (error) {
@@ -117,7 +132,10 @@ export class EmailService {
     const html = htmlTemplate
       .replace(/{{invitationUrl}}/g, invitationUrl)
       .replace(/{{role}}/g, role)
-      .replace(/{{#if isSuperAdmin}}/g, role === AdminRole.SUPERADMIN ? '' : '<!--')
+      .replace(
+        /{{#if isSuperAdmin}}/g,
+        role === AdminRole.SUPERADMIN ? '' : '<!--',
+      )
       .replace(/{{else}}/g, role === AdminRole.SUPERADMIN ? '<!--' : '')
       .replace(/{{\/if}}/g, '-->')
       .replace(/<!--[\s\S]*?-->/g, ''); // Remove HTML comments

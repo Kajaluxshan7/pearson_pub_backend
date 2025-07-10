@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Addon } from './entities/addon.entity';
@@ -16,11 +20,35 @@ export class AddonsService {
     createAddonDto: CreateAddonDto,
     adminId: string,
   ): Promise<Addon> {
-    const addon = this.addonsRepository.create({
-      ...createAddonDto,
-      lastEditedByAdminId: adminId,
-    });
-    return this.addonsRepository.save(addon);
+    try {
+      // Check if addon with same name already exists for this item
+      const existingAddon = await this.addonsRepository.findOne({
+        where: {
+          itemId: createAddonDto.itemId,
+          name: createAddonDto.name,
+        },
+      });
+
+      if (existingAddon) {
+        throw new ConflictException(
+          `Addon '${createAddonDto.name}' already exists for this item`,
+        );
+      }
+
+      const addon = this.addonsRepository.create({
+        ...createAddonDto,
+        lastEditedByAdminId: adminId,
+      });
+      return this.addonsRepository.save(addon);
+    } catch (error) {
+      if (error.code === '23505') {
+        // PostgreSQL unique constraint violation
+        throw new ConflictException(
+          `Addon '${createAddonDto.name}' already exists for this item`,
+        );
+      }
+      throw error;
+    }
   }
 
   async findAll(
@@ -101,5 +129,64 @@ export class AddonsService {
 
   async getCount(): Promise<number> {
     return this.addonsRepository.count();
+  }
+
+  async duplicate(id: string, adminId: string): Promise<Addon> {
+    try {
+      console.log('🔄 Duplicating addon:', { id, adminId });
+
+      // Find the original addon
+      const originalAddon = await this.findOne(id);
+      console.log('📄 Found original addon:', originalAddon);
+
+      // Create a new addon with copied data
+      const duplicateData = {
+        name: `${originalAddon.name} (Copy)`,
+        description: originalAddon.description,
+        price: originalAddon.price,
+        category_type: originalAddon.category_type,
+        itemId: originalAddon.itemId,
+      };
+
+      // Check if an addon with this name already exists for this item
+      const existingAddon = await this.addonsRepository.findOne({
+        where: {
+          name: duplicateData.name,
+          itemId: originalAddon.itemId,
+        },
+      });
+
+      if (existingAddon) {
+        // If it exists, add a number to make it unique
+        let counter = 2;
+        let newName = `${originalAddon.name} (Copy ${counter})`;
+
+        while (
+          await this.addonsRepository.findOne({
+            where: { name: newName, itemId: originalAddon.itemId },
+          })
+        ) {
+          counter++;
+          newName = `${originalAddon.name} (Copy ${counter})`;
+        }
+
+        duplicateData.name = newName;
+      }
+
+      const duplicatedAddon = await this.create(duplicateData, adminId);
+      console.log('✅ Addon duplicated successfully:', duplicatedAddon);
+
+      return duplicatedAddon;
+    } catch (error) {
+      console.error('❌ Error duplicating addon:', error);
+
+      // Handle unique constraint violation specifically
+      if (error.code === '23505') {
+        // PostgreSQL unique violation
+        throw new Error('An addon with this name already exists for this item');
+      }
+
+      throw error;
+    }
   }
 }

@@ -10,6 +10,7 @@ import {
   ParseUUIDPipe,
   ParseIntPipe,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { WingSaucesService } from './wing-sauces.service';
 import { CreateWingSauceDto } from './dto/create-wing-sauce.dto';
@@ -26,8 +27,22 @@ export class WingSaucesController {
 
   @Post()
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  create(@Body() createWingSauceDto: CreateWingSauceDto) {
-    return this.wingSaucesService.create(createWingSauceDto);
+  async create(@Body() createWingSauceDto: CreateWingSauceDto, @Request() req) {
+    try {
+      console.log(
+        '🔄 WingSauces Controller - Create request:',
+        createWingSauceDto,
+      );
+      const result = await this.wingSaucesService.create(
+        createWingSauceDto,
+        req.user.id,
+      );
+      console.log('✅ WingSauces Controller - Create successful');
+      return result;
+    } catch (error) {
+      console.error('❌ WingSauces Controller - Create error:', error);
+      throw error;
+    }
   }
 
   @Get()
@@ -48,16 +63,40 @@ export class WingSaucesController {
 
   @Patch(':id')
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  update(
+  async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateWingSauceDto: UpdateWingSauceDto,
+    @Request() req,
   ) {
-    return this.wingSaucesService.update(id, updateWingSauceDto);
+    try {
+      console.log('🔄 WingSauces Controller - Update request:', {
+        id,
+        updateWingSauceDto,
+      });
+      const result = await this.wingSaucesService.update(
+        id,
+        updateWingSauceDto,
+        req.user.id,
+      );
+      console.log('✅ WingSauces Controller - Update successful');
+      return result;
+    } catch (error) {
+      console.error('❌ WingSauces Controller - Update error:', error);
+      throw error;
+    }
   }
 
   @Delete(':id')
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.wingSaucesService.remove(id);
+  async remove(@Param('id', ParseUUIDPipe) id: string) {
+    try {
+      console.log('🔄 WingSauces Controller - Delete request for ID:', id);
+      await this.wingSaucesService.remove(id);
+      console.log('✅ WingSauces Controller - Delete successful');
+      return { message: 'Wing sauce deleted successfully' };
+    } catch (error) {
+      console.error('❌ WingSauces Controller - Delete error:', error);
+      throw error;
+    }
   }
 }

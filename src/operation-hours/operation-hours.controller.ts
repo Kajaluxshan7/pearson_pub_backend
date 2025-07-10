@@ -32,14 +32,25 @@ export class OperationHoursController {
 
   @Post()
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  create(
+  async create(
     @Body() createOperationHourDto: CreateOperationHourDto,
     @Request() req,
   ) {
-    return this.operationHoursService.create(
-      createOperationHourDto,
-      req.user.id,
-    );
+    try {
+      console.log(
+        '🔄 OperationHours Controller - Create request:',
+        createOperationHourDto,
+      );
+      const result = await this.operationHoursService.create(
+        createOperationHourDto,
+        req.user.id,
+      );
+      console.log('✅ OperationHours Controller - Create successful');
+      return result;
+    } catch (error) {
+      console.error('❌ OperationHours Controller - Create error:', error);
+      throw error;
+    }
   }
 
   @Get()
@@ -62,20 +73,40 @@ export class OperationHoursController {
 
   @Patch(':id')
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateOperationHourDto: UpdateOperationHourDto,
     @Request() req,
   ) {
-    return this.operationHoursService.update(
-      id,
-      updateOperationHourDto,
-      req.user.id,
-    );
+    try {
+      console.log('🔄 OperationHours Controller - Update request:', {
+        id,
+        updateOperationHourDto,
+      });
+      const result = await this.operationHoursService.update(
+        id,
+        updateOperationHourDto,
+        req.user.id,
+      );
+      console.log('✅ OperationHours Controller - Update successful');
+      return result;
+    } catch (error) {
+      console.error('❌ OperationHours Controller - Update error:', error);
+      throw error;
+    }
   }
+
   @Delete(':id')
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  remove(@Param('id') id: string) {
-    return this.operationHoursService.remove(id);
+  async remove(@Param('id') id: string) {
+    try {
+      console.log('🔄 OperationHours Controller - Delete request for ID:', id);
+      await this.operationHoursService.remove(id);
+      console.log('✅ OperationHours Controller - Delete successful');
+      return { message: 'Operation hour deleted successfully' };
+    } catch (error) {
+      console.error('❌ OperationHours Controller - Delete error:', error);
+      throw error;
+    }
   }
 }

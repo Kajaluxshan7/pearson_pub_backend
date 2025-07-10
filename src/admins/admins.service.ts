@@ -34,14 +34,16 @@ export class AdminsService {
         'admin.is_active',
         'admin.created_at',
         'admin.updated_at',
-      ])
-      .where('admin.is_active = :isActive', { isActive: true });
+      ]);
 
-    // Normal admins can only see other normal admins
+    // Normal admins can only see verified and active normal admins
     if (currentAdminRole === AdminRole.ADMIN) {
-      queryBuilder.andWhere('admin.role = :role', { role: AdminRole.ADMIN });
+      queryBuilder
+        .where('admin.role = :role', { role: AdminRole.ADMIN })
+        .andWhere('admin.is_verified = :isVerified', { isVerified: true })
+        .andWhere('admin.is_active = :isActive', { isActive: true });
     }
-    // Superadmins can see both normal admins and superadmins
+    // Superadmins can see all admins regardless of status
 
     return await queryBuilder.getMany();
   }
@@ -92,7 +94,29 @@ export class AdminsService {
     }
 
     await this.adminsRepository.update(id, updateAdminDto);
-    return this.findOne(id);
+
+    // Return the updated admin with selected fields
+    const updatedAdmin = await this.adminsRepository.findOne({
+      where: { id },
+      select: [
+        'id',
+        'email',
+        'first_name',
+        'phone',
+        'address',
+        'role',
+        'is_verified',
+        'is_active',
+        'created_at',
+        'updated_at',
+      ],
+    });
+
+    if (!updatedAdmin) {
+      throw new NotFoundException(`Admin with ID ${id} not found after update`);
+    }
+
+    return updatedAdmin;
   }
   async remove(id: string, currentAdminRole: AdminRole): Promise<void> {
     const admin = await this.adminsRepository.findOne({ where: { id } });
@@ -110,9 +134,8 @@ export class AdminsService {
       throw new ForbiddenException('Superadmins cannot be deleted');
     }
 
-    // Soft delete by deactivating
-    admin.is_active = false;
-    await this.adminsRepository.save(admin);
+    // Hard delete from database
+    await this.adminsRepository.remove(admin);
   }
 
   async getCount(): Promise<number> {
@@ -144,45 +167,59 @@ export class AdminsService {
         'admin.updated_at',
       ]);
 
-    // Only show active admins by default, unless specifically requesting inactive ones
-    if (!filters.includeInactive) {
-      queryBuilder.where('admin.is_active = :isActive', { isActive: true });
-    }
+    console.log('🔍 Admin search filters:', { filters, currentAdminRole });
 
-    // Role-based filtering - normal admins can only see other normal admins
+    // Role-based visibility rules
     if (currentAdminRole === AdminRole.ADMIN) {
-      queryBuilder.andWhere('admin.role = :role', { role: AdminRole.ADMIN });
+      // Normal admins can only see verified and active normal admins
+      queryBuilder
+        .where('admin.role = :role', { role: AdminRole.ADMIN })
+        .andWhere('admin.is_verified = :isVerified', { isVerified: true })
+        .andWhere('admin.is_active = :isActive', { isActive: true });
+    } else {
+      // Superadmins can see all admins (active and inactive)
+      // No initial filter - superadmins see everything
     }
-    // Superadmins can see both normal admins and superadmins
 
-    // Apply filters
-    if (filters.search) {
+    // Apply search filter - more comprehensive search
+    if (filters.search && filters.search.trim()) {
+      const searchTerm = `%${filters.search.trim().toLowerCase()}%`;
+      console.log('🔍 Searching with term:', searchTerm);
       queryBuilder.andWhere(
-        '(admin.email ILIKE :search OR admin.first_name ILIKE :search OR admin.phone ILIKE :search)',
-        { search: `%${filters.search}%` },
+        '(LOWER(admin.email) LIKE :search OR LOWER(admin.first_name) LIKE :search OR admin.phone LIKE :search OR LOWER(admin.address) LIKE :search)',
+        { search: searchTerm },
       );
     }
 
-    if (filters.role) {
+    // Apply role filter (only for superadmins)
+    if (filters.role && currentAdminRole === AdminRole.SUPERADMIN) {
       queryBuilder.andWhere('admin.role = :filterRole', {
         filterRole: filters.role,
       });
     }
 
-    if (filters.status !== undefined) {
-      queryBuilder.andWhere('admin.is_verified = :status', {
+    // Apply status filter (only for superadmins)
+    if (
+      filters.status !== undefined &&
+      currentAdminRole === AdminRole.SUPERADMIN
+    ) {
+      queryBuilder.andWhere('admin.is_active = :status', {
         status: filters.status,
       });
     }
 
-    // Pagination
+    // Order by creation date (newest first)
+    queryBuilder.orderBy('admin.created_at', 'DESC');
+
+    // Get total count for pagination
+    const total = await queryBuilder.getCount();
+
+    // Apply pagination
     const offset = (page - 1) * limit;
     queryBuilder.skip(offset).take(limit);
 
-    // Order by created_at desc
-    queryBuilder.orderBy('admin.created_at', 'DESC');
-
-    const [data, total] = await queryBuilder.getManyAndCount();
+    // Execute query
+    const data = await queryBuilder.getMany();
 
     return {
       data,
@@ -222,6 +259,27 @@ export class AdminsService {
     targetAdmin.is_active = !targetAdmin.is_active;
     await this.adminsRepository.save(targetAdmin);
 
-    return this.findOne(id);
+    // Return the admin with selected fields (similar to findOne)
+    const updatedAdmin = await this.adminsRepository.findOne({
+      where: { id },
+      select: [
+        'id',
+        'email',
+        'first_name',
+        'phone',
+        'address',
+        'role',
+        'is_verified',
+        'is_active',
+        'created_at',
+        'updated_at',
+      ],
+    });
+
+    if (!updatedAdmin) {
+      throw new NotFoundException(`Admin with ID ${id} not found after update`);
+    }
+
+    return updatedAdmin;
   }
 }

@@ -14,10 +14,12 @@ export class SubstituteSidesService {
 
   async create(
     createSubstituteSideDto: CreateSubstituteSideDto,
+    adminId?: string,
   ): Promise<SubstituteSide> {
-    const substituteSide = this.substituteSideRepository.create(
-      createSubstituteSideDto,
-    );
+    const substituteSide = this.substituteSideRepository.create({
+      ...createSubstituteSideDto,
+      lastEditedByAdminId: adminId,
+    });
     return await this.substituteSideRepository.save(substituteSide);
   }
 
@@ -65,10 +67,15 @@ export class SubstituteSidesService {
   async update(
     id: string,
     updateSubstituteSideDto: UpdateSubstituteSideDto,
+    adminId?: string,
   ): Promise<SubstituteSide> {
     await this.findOne(id); // Check if exists
 
-    await this.substituteSideRepository.update(id, updateSubstituteSideDto);
+    const updateData = adminId
+      ? { ...updateSubstituteSideDto, lastEditedByAdminId: adminId }
+      : updateSubstituteSideDto;
+
+    await this.substituteSideRepository.update(id, updateData);
     return this.findOne(id);
   }
 

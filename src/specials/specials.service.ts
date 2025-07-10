@@ -16,11 +16,17 @@ export class SpecialsService {
     private specialsRepository: Repository<Special>,
   ) {}
 
-  async create(createSpecialDto: CreateSpecialDto): Promise<Special> {
+  async create(
+    createSpecialDto: CreateSpecialDto,
+    adminId?: string,
+  ): Promise<Special> {
     // Validate business rules
     this.validateSpecialRules(createSpecialDto);
 
-    const special = this.specialsRepository.create(createSpecialDto);
+    const special = this.specialsRepository.create({
+      ...createSpecialDto,
+      lastEditedByAdminId: adminId,
+    });
     return await this.specialsRepository.save(special);
   }
 
@@ -76,13 +82,19 @@ export class SpecialsService {
   async update(
     id: string,
     updateSpecialDto: UpdateSpecialDto,
+    adminId?: string,
   ): Promise<Special> {
     await this.findOne(id); // Check if exists
 
     // Validate business rules
     this.validateSpecialRules(updateSpecialDto);
 
-    await this.specialsRepository.update(id, updateSpecialDto);
+    // Set admin ID if provided
+    const updateData = adminId
+      ? { ...updateSpecialDto, lastEditedByAdminId: adminId }
+      : updateSpecialDto;
+
+    await this.specialsRepository.update(id, updateData);
     return this.findOne(id);
   }
 

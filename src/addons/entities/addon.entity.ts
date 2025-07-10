@@ -6,11 +6,13 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  Unique,
 } from 'typeorm';
 import { Item } from '../../items/entities/item.entity';
 import { Admin } from '../../admins/entities/admin.entity';
 
 @Entity('addons')
+@Unique(['itemId', 'name']) // Prevent duplicate addon names for the same item
 export class Addon {
   @PrimaryGeneratedColumn('uuid')
   id: string;

@@ -10,6 +10,7 @@ import {
   ParseUUIDPipe,
   ParseIntPipe,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { SpecialsService } from './specials.service';
 import { CreateSpecialDto } from './dto/create-special.dto';
@@ -26,8 +27,19 @@ export class SpecialsController {
 
   @Post()
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  create(@Body() createSpecialDto: CreateSpecialDto) {
-    return this.specialsService.create(createSpecialDto);
+  async create(@Body() createSpecialDto: CreateSpecialDto, @Request() req) {
+    try {
+      console.log('🔄 Specials Controller - Create request:', createSpecialDto);
+      const result = await this.specialsService.create(
+        createSpecialDto,
+        req.user.id,
+      );
+      console.log('✅ Specials Controller - Create successful');
+      return result;
+    } catch (error) {
+      console.error('❌ Specials Controller - Create error:', error);
+      throw error;
+    }
   }
 
   @Get()
@@ -49,16 +61,40 @@ export class SpecialsController {
 
   @Patch(':id')
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  update(
+  async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateSpecialDto: UpdateSpecialDto,
+    @Request() req,
   ) {
-    return this.specialsService.update(id, updateSpecialDto);
+    try {
+      console.log('🔄 Specials Controller - Update request:', {
+        id,
+        updateSpecialDto,
+      });
+      const result = await this.specialsService.update(
+        id,
+        updateSpecialDto,
+        req.user.id,
+      );
+      console.log('✅ Specials Controller - Update successful');
+      return result;
+    } catch (error) {
+      console.error('❌ Specials Controller - Update error:', error);
+      throw error;
+    }
   }
 
   @Delete(':id')
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.specialsService.remove(id);
+  async remove(@Param('id', ParseUUIDPipe) id: string) {
+    try {
+      console.log('🔄 Specials Controller - Delete request for ID:', id);
+      await this.specialsService.remove(id);
+      console.log('✅ Specials Controller - Delete successful');
+      return { message: 'Special deleted successfully' };
+    } catch (error) {
+      console.error('❌ Specials Controller - Delete error:', error);
+      throw error;
+    }
   }
 }

@@ -16,9 +16,15 @@ export class WingSaucesService {
     private wingSauceRepository: Repository<WingSauce>,
   ) {}
 
-  async create(createWingSauceDto: CreateWingSauceDto): Promise<WingSauce> {
+  async create(
+    createWingSauceDto: CreateWingSauceDto,
+    adminId?: string,
+  ): Promise<WingSauce> {
     try {
-      const wingSauce = this.wingSauceRepository.create(createWingSauceDto);
+      const wingSauce = this.wingSauceRepository.create({
+        ...createWingSauceDto,
+        lastEditedByAdminId: adminId,
+      });
       return await this.wingSauceRepository.save(wingSauce);
     } catch (error) {
       if (error.code === '23505') {
@@ -75,11 +81,16 @@ export class WingSaucesService {
   async update(
     id: string,
     updateWingSauceDto: UpdateWingSauceDto,
+    adminId?: string,
   ): Promise<WingSauce> {
     await this.findOne(id); // Check if exists
 
     try {
-      await this.wingSauceRepository.update(id, updateWingSauceDto);
+      const updateData = adminId
+        ? { ...updateWingSauceDto, lastEditedByAdminId: adminId }
+        : updateWingSauceDto;
+
+      await this.wingSauceRepository.update(id, updateData);
       return this.findOne(id);
     } catch (error) {
       if (error.code === '23505') {

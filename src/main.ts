@@ -3,6 +3,16 @@ import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 
+// Global error handler
+process.on('uncaughtException', (error) => {
+  console.error('❌ UNCAUGHT EXCEPTION:', error);
+  console.error('Stack:', error.stack);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ UNHANDLED REJECTION at:', promise, 'reason:', reason);
+});
+
 async function bootstrap() {
   console.log('port is', process.env.PORT);
 
@@ -20,8 +30,31 @@ async function bootstrap() {
   // Enable cookie parser
   app.use(cookieParser());
 
-  // Enable validation pipes
-  app.useGlobalPipes(new ValidationPipe());
+  // Enable validation pipes with detailed error messages
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+      disableErrorMessages: false,
+      validationError: {
+        target: false,
+        value: false,
+      },
+    }),
+  );
+
+  // Add global error logging
+  app.use((err: any, req: any, res: any, next: any) => {
+    console.error('❌ HTTP ERROR:', {
+      method: req.method,
+      url: req.url,
+      error: err.message,
+      stack: err.stack,
+      body: req.body,
+    });
+    next(err);
+  });
 
   await app.listen(process.env.PORT ?? 5000);
   console.log(`Application is running on: ${await app.getUrl()}`);
