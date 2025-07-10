@@ -1,4 +1,10 @@
-import { Injectable, ConflictException, UnauthorizedException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -20,15 +26,20 @@ export class AuthService {
     private invitationRepository: Repository<AdminInvitation>,
     private jwtService: JwtService,
     private emailService: EmailService,
-  ) {}  async verifyEmail(token: string): Promise<{ message: string; admin: Partial<Admin> }> {
+  ) {}
+  async verifyEmail(
+    token: string,
+  ): Promise<{ message: string; admin: Partial<Admin> }> {
     try {
       const payload = this.jwtService.verify(token);
-      
+
       if (payload.type !== 'email_verification') {
         throw new BadRequestException('Invalid verification token');
       }
 
-      const admin = await this.adminRepository.findOne({ where: { id: payload.sub } });
+      const admin = await this.adminRepository.findOne({
+        where: { id: payload.sub },
+      });
       if (!admin) {
         throw new BadRequestException('Admin not found');
       }
@@ -48,7 +59,10 @@ export class AuthService {
         admin: adminWithoutPassword,
       };
     } catch (error) {
-      if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
+      if (
+        error.name === 'JsonWebTokenError' ||
+        error.name === 'TokenExpiredError'
+      ) {
         throw new BadRequestException('Invalid or expired verification token');
       }
       throw error;
@@ -56,33 +70,39 @@ export class AuthService {
   }
   async validateAdmin(email: string, password: string): Promise<any> {
     const admin = await this.adminRepository.findOne({ where: { email } });
-    
+
     if (!admin) {
       return null;
     }
 
     if (!admin.is_verified) {
-      throw new UnauthorizedException('Please verify your email before logging in');
+      throw new UnauthorizedException(
+        'Please verify your email before logging in',
+      );
     }
 
     if (!admin.is_active) {
       throw new UnauthorizedException('Your account has been deactivated');
     }
 
-    if (admin.password_hash && await bcrypt.compare(password, admin.password_hash)) {
+    if (
+      admin.password_hash &&
+      (await bcrypt.compare(password, admin.password_hash))
+    ) {
       const { password_hash, ...result } = admin;
       return result;
     }
     return null;
-  }generateAuthCookie(admin: any): string {
+  }
+  generateAuthCookie(admin: any): string {
     if (!admin || !admin.email || !admin.id) {
       throw new Error('Invalid admin object provided for token generation');
     }
-    
-    const payload = { 
-      email: admin.email, 
-      sub: admin.id, 
-      role: admin.role 
+
+    const payload = {
+      email: admin.email,
+      sub: admin.id,
+      role: admin.role,
     };
     return this.jwtService.sign(payload);
   }
@@ -119,30 +139,38 @@ export class AuthService {
 
     return await this.adminRepository.save(newAdmin);
   }
-    async inviteAdmin(inviteAdminDto: InviteAdminDto, invitedBy: string): Promise<{ message: string }> {
+  async inviteAdmin(
+    inviteAdminDto: InviteAdminDto,
+    invitedBy: string,
+  ): Promise<{ message: string }> {
     const { email, role = AdminRole.ADMIN } = inviteAdminDto;
 
     // Check if admin already exists
-    const existingAdmin = await this.adminRepository.findOne({ where: { email } });
+    const existingAdmin = await this.adminRepository.findOne({
+      where: { email },
+    });
     if (existingAdmin) {
       throw new ConflictException('Admin with this email already exists');
     }
 
     // Check if there's already a pending invitation
-    const existingInvitation = await this.invitationRepository.findOne({ 
-      where: { email, is_used: false } 
+    const existingInvitation = await this.invitationRepository.findOne({
+      where: { email, is_used: false },
     });
-    if (existingInvitation && existingInvitation.expires_at > new Date()) {
-      throw new ConflictException('Invitation already sent to this email');
+
+    // If there's an unused invitation, we can resend it or create a new one
+    if (existingInvitation) {
+      // Delete the old invitation to create a new one
+      await this.invitationRepository.remove(existingInvitation);
     }
 
     // Generate cryptographically secure token
     const token = crypto.randomBytes(32).toString('hex');
     const tokenHash = await bcrypt.hash(token, 10);
 
-    // Set expiry time (1 hour from now)
+    // Set expiry time (24 hours from now for better user experience)
     const expiresAt = new Date();
-    expiresAt.setHours(expiresAt.getHours() + 1);
+    expiresAt.setHours(expiresAt.getHours() + 24);
 
     // Create invitation record
     const invitation = this.invitationRepository.create({
@@ -159,18 +187,22 @@ export class AuthService {
     await this.emailService.sendAdminInvitationEmail(email, token, role);
 
     return {
-      message: 'Admin invitation sent successfully',
+      message: existingInvitation
+        ? 'Admin invitation resent successfully'
+        : 'Admin invitation sent successfully',
     };
   }
-  async validateInvitation(validateInvitationDto: ValidateInvitationDto): Promise<{ 
-    message: string; 
-    invitation: { email: string; role: AdminRole } 
+  async validateInvitation(
+    validateInvitationDto: ValidateInvitationDto,
+  ): Promise<{
+    message: string;
+    invitation: { email: string; role: AdminRole };
   }> {
     const { token } = validateInvitationDto;
 
     // Find all non-used invitations and check token
-    const invitations = await this.invitationRepository.find({ 
-      where: { is_used: false } 
+    const invitations = await this.invitationRepository.find({
+      where: { is_used: false },
     });
 
     let validInvitation: AdminInvitation | null = null;
@@ -198,9 +230,9 @@ export class AuthService {
     };
   }
 
-  async setupPassword(setupPasswordDto: SetupPasswordDto): Promise<{ 
-    message: string; 
-    admin: Partial<Admin> 
+  async setupPassword(setupPasswordDto: SetupPasswordDto): Promise<{
+    message: string;
+    admin: Partial<Admin>;
   }> {
     const { token, password, ...adminData } = setupPasswordDto;
 
@@ -209,7 +241,9 @@ export class AuthService {
     const { email, role } = validation.invitation;
 
     // Check if admin already exists (shouldn't happen but extra safety)
-    const existingAdmin = await this.adminRepository.findOne({ where: { email } });
+    const existingAdmin = await this.adminRepository.findOne({
+      where: { email },
+    });
     if (existingAdmin) {
       throw new ConflictException('Admin account already exists');
     }
@@ -233,7 +267,7 @@ export class AuthService {
     // Mark invitation as used
     await this.invitationRepository.update(
       { email, is_used: false },
-      { is_used: true }
+      { is_used: true },
     );
 
     // Return admin without password
@@ -245,16 +279,26 @@ export class AuthService {
     };
   }
 
-  async deleteAdmin(adminId: string, requestingAdmin: Admin): Promise<{ message: string }> {
+  async deleteAdmin(
+    adminId: string,
+    requestingAdmin: Admin,
+  ): Promise<{ message: string }> {
     // Get the admin to be deleted
-    const adminToDelete = await this.adminRepository.findOne({ where: { id: adminId } });
+    const adminToDelete = await this.adminRepository.findOne({
+      where: { id: adminId },
+    });
     if (!adminToDelete) {
       throw new BadRequestException('Admin not found');
     }
 
     // Prevent deleting superadmins (only superadmins can delete other superadmins)
-    if (adminToDelete.role === AdminRole.SUPERADMIN && requestingAdmin.role !== AdminRole.SUPERADMIN) {
-      throw new ForbiddenException('Only superadmins can delete other superadmins');
+    if (
+      adminToDelete.role === AdminRole.SUPERADMIN &&
+      requestingAdmin.role !== AdminRole.SUPERADMIN
+    ) {
+      throw new ForbiddenException(
+        'Only superadmins can delete other superadmins',
+      );
     }
 
     // Prevent self-deletion
