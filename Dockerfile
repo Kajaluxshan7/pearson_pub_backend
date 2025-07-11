@@ -40,7 +40,7 @@ COPY --from=builder /app/.develop.env ./.env
 
 # install production deps only
 RUN npm install -g pnpm@latest \
- && pnpm install --prod --frozen-lockfile
+ && pnpm install
 
 # app listens on 5000
 EXPOSE 5000
