@@ -45,12 +45,6 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# Environment variables
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
 
 # IDE files
 .vscode/
@@ -90,11 +84,6 @@ __tests__/
 *.spec.js
 *.spec.ts
 
-# Development files
-.eslintrc*
-.prettierrc*
-jest.config*
-tsconfig*.json
 
 # Temporary files
 tmp/
