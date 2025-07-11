@@ -6,6 +6,10 @@ services:
       - '5000:5000'
     extra_hosts:
       - 'host.docker.internal:host-gateway'
+    env_file:
+      - .develop.env
     environment:
       NODE_ENV: production
     restart: unless-stopped
+    volumes:
+      - ./.develop.env:/app/.env:ro

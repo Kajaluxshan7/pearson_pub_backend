@@ -14,7 +14,8 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 async function bootstrap() {
-  console.log('port is', process.env.PORT);
+  const port = process.env.PORT || 5000;
+  console.log('🚀 Starting application on port:', port);
 
   const app = await NestFactory.create(AppModule); // Enable CORS
   app.enableCors({
@@ -56,7 +57,7 @@ async function bootstrap() {
     next(err);
   });
 
-  await app.listen(process.env.PORT ?? 5000);
-  console.log(`Application is running on: ${await app.getUrl()}`);
+  await app.listen(port, '0.0.0.0');
+  console.log(`✅ Application is running on: http://0.0.0.0:${port}`);
 }
 bootstrap();
