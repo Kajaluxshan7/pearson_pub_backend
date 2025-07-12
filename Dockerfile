@@ -24,6 +24,9 @@ COPY . .
 # build the app
 RUN pnpm run build
 
+# Compile data-source.ts to JavaScript
+RUN npx tsc data-source.ts --outDir dist --target ES2020 --module commonjs --esModuleInterop --allowSyntheticDefaultImports
+
 
 # ------------------------
 # Stage 2: Production image
@@ -42,9 +45,28 @@ COPY --from=builder /app/.develop.env ./.env
 RUN npm install -g pnpm@latest \
  && pnpm install --prod
 
+# install TypeORM CLI and ts-node locally for migrations
+RUN pnpm add typeorm ts-node typescript @types/node
+
+# copy migration script
+COPY --from=builder /app/migrate.sh ./
+RUN chmod +x migrate.sh
+
 # app listens on 5000
 EXPOSE 5000
 ENV PORT=5000
+ENV MIGRATION_MODE=true
 
-# start the app
-CMD ["node", "dist/main.js"]
+# create startup script that runs migrations first
+RUN echo '#!/bin/sh' > start.sh && \
+    echo 'set -e' >> start.sh && \
+    echo 'echo "🚀 Starting application with migrations..."' >> start.sh && \
+    echo 'echo "📊 Running database migrations..."' >> start.sh && \
+    echo 'npx typeorm -d dist/data-source.js migration:run' >> start.sh && \
+    echo 'echo "✅ Migrations completed successfully"' >> start.sh && \
+    echo 'echo "🎯 Starting main application..."' >> start.sh && \
+    echo 'exec node dist/src/main.js' >> start.sh && \
+    chmod +x start.sh
+
+# start the app with migrations
+CMD ["./start.sh"]
