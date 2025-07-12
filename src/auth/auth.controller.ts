@@ -51,7 +51,8 @@ export class AuthController {
     // Set HTTP-only cookie
     res.cookie('access_token', accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+      // secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+      secure: false, // Disable secure cookies for local development
       sameSite: 'strict',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
@@ -74,7 +75,8 @@ export class AuthController {
     // Set HTTP-only cookie
     res.cookie('access_token', accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      // secure: process.env.NODE_ENV === 'production',
+      secure: false, // Disable secure cookies for local development
       sameSite: 'strict',
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
