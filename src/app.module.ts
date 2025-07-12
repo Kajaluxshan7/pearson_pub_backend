@@ -26,17 +26,42 @@ import { PublicApiModule } from './public-api/public-api.module';
     TypeOrmModule.forRootAsync({
       // Use forRootAsync for async configuration
       imports: [ConfigModule], // Import ConfigModule here
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_DATABASE'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: configService.get<string>('NODE_ENV') !== 'production',
-        logging: ['query', 'error'],
-      }),
+      useFactory: (configService: ConfigService) => {
+        // Parse DATABASE_URL or use individual variables
+        const databaseUrl = configService.get<string>('DATABASE_URL');
+        let databaseConfig;
+
+        if (databaseUrl) {
+          // Parse DATABASE_URL: postgresql://username:password@host:port/database
+          const url = new URL(databaseUrl);
+          databaseConfig = {
+            host: url.hostname,
+            port: parseInt(url.port) || 5432,
+            username: url.username,
+            password: url.password,
+            database: url.pathname.slice(1), // Remove leading slash
+          };
+        } else {
+          // Use individual environment variables as fallback
+          databaseConfig = {
+            host: configService.get<string>('DB_HOST', 'localhost'),
+            port: configService.get<number>('DB_PORT', 5432),
+            username: configService.get<string>('DB_USERNAME', 'postgres'),
+            password: configService.get<string>('DB_PASSWORD'),
+            database: configService.get<string>('DB_DATABASE', 'pearson_db'),
+          };
+        }
+
+        return {
+          type: 'postgres',
+          ...databaseConfig,
+          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          migrations: [__dirname + '/migrations/*{.ts,.js}'],
+          synchronize: configService.get<string>('NODE_ENV') !== 'production',
+          logging: ['query', 'error'],
+          ssl: false, // Disable SSL for local PostgreSQL connections
+        };
+      },
       inject: [ConfigService], // Inject ConfigService
     }),
     AuthModule,

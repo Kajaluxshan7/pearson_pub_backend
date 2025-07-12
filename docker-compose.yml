@@ -10,6 +10,7 @@ services:
       - .develop.env
     environment:
       NODE_ENV: production
+      MIGRATION_MODE: "true"
     restart: unless-stopped
     volumes:
       - ./.develop.env:/app/.env:ro
