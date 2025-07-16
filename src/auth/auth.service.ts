@@ -314,4 +314,27 @@ export class AuthService {
       message: 'Admin account deactivated successfully',
     };
   }
+
+  async getProfile(adminId: string): Promise<Partial<Admin>> {
+    const admin = await this.adminRepository.findOne({
+      where: { id: adminId },
+      select: [
+        'id',
+        'email',
+        'first_name',
+        'phone',
+        'address',
+        'avatar_url',
+        'role',
+        'is_verified',
+        'is_active',
+      ],
+    });
+
+    if (!admin) {
+      throw new UnauthorizedException('Admin not found');
+    }
+
+    return admin;
+  }
 }

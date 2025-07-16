@@ -85,8 +85,8 @@ export class AuthController {
   }
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  getProfile(@Request() req) {
-    return req.user; // Returns authenticated admin profile
+  async getProfile(@Request() req) {
+    return await this.authService.getProfile(req.user.id);
   }
 
   @Post('logout')

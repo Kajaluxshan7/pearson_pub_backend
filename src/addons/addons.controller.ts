@@ -53,10 +53,17 @@ export class AddonsController {
     @Query('limit') limit?: string,
     @Query('search') search?: string,
     @Query('itemId') itemId?: string,
+    @Query('category_type') categoryType?: string,
   ) {
     const pageNum = page ? parseInt(page, 10) : 1;
     const limitNum = limit ? parseInt(limit, 10) : 10;
-    return this.addonsService.findAll(pageNum, limitNum, search, itemId);
+    return this.addonsService.findAll(
+      pageNum,
+      limitNum,
+      search,
+      itemId,
+      categoryType,
+    );
   }
 
   @Get(':id')

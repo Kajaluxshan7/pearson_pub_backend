@@ -8,12 +8,14 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Admin, AdminRole } from './entities/admin.entity';
+import { FileUploadService } from '../common/services/file-upload.service';
 
 @Injectable()
 export class AdminsService {
   constructor(
     @InjectRepository(Admin)
     private adminsRepository: Repository<Admin>,
+    private fileUploadService: FileUploadService,
   ) {}
 
   async create(createAdminDto: CreateAdminDto): Promise<Admin> {
@@ -281,5 +283,49 @@ export class AdminsService {
     }
 
     return updatedAdmin;
+  }
+
+  async updateProfile(id: string, updateAdminDto: UpdateAdminDto): Promise<Admin> {
+    const admin = await this.adminsRepository.findOne({ where: { id } });
+    if (!admin) {
+      throw new NotFoundException(`Admin with ID ${id} not found`);
+    }
+
+    // Only allow updating certain fields for profile
+    const allowedFields = ['first_name', 'phone', 'address'];
+    const updateData: Partial<Admin> = {};
+    
+    allowedFields.forEach(field => {
+      if (updateAdminDto[field] !== undefined) {
+        updateData[field] = updateAdminDto[field];
+      }
+    });
+
+    Object.assign(admin, updateData);
+    await this.adminsRepository.save(admin);
+
+    // Return admin without sensitive information
+    const { password_hash, ...result } = admin;
+    return result as Admin;
+  }
+
+  async uploadAvatar(id: string, file: Express.Multer.File): Promise<{ avatar_url: string }> {
+    const admin = await this.adminsRepository.findOne({ where: { id } });
+    if (!admin) {
+      throw new NotFoundException(`Admin with ID ${id} not found`);
+    }
+
+    try {
+      // Upload to S3 in profile folder
+      const uploadResult = await this.fileUploadService.uploadFile(file, 'profile');
+      
+      // Update admin's avatar_url
+      admin.avatar_url = uploadResult.url;
+      await this.adminsRepository.save(admin);
+
+      return { avatar_url: uploadResult.url };
+    } catch (error) {
+      throw new Error(`Failed to upload avatar: ${error.message}`);
+    }
   }
 }

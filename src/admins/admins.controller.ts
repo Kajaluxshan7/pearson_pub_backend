@@ -9,7 +9,10 @@ import {
   UseGuards,
   Request,
   Query,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AdminsService } from './admins.service';
 import { CreateAdminDto } from './dto/create-admin.dto';
 import { UpdateAdminDto } from './dto/update-admin.dto';
@@ -92,5 +95,24 @@ export class AdminsController {
   @Roles(AdminRole.SUPERADMIN)
   toggleStatus(@Param('id') id: string, @Request() req) {
     return this.adminsService.toggleStatus(id, req.user.id, req.user.role);
+  }
+
+  @Patch('profile')
+  @Roles(AdminRole.SUPERADMIN, AdminRole.ADMIN)
+  updateProfile(
+    @Body() updateAdminDto: UpdateAdminDto,
+    @Request() req,
+  ) {
+    return this.adminsService.updateProfile(req.user.id, updateAdminDto);
+  }
+
+  @Post('profile/avatar')
+  @Roles(AdminRole.SUPERADMIN, AdminRole.ADMIN)
+  @UseInterceptors(FileInterceptor('avatar'))
+  async uploadAvatar(
+    @UploadedFile() file: Express.Multer.File,
+    @Request() req,
+  ) {
+    return this.adminsService.uploadAvatar(req.user.id, file);
   }
 }

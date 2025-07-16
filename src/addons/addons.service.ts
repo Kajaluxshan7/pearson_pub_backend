@@ -56,6 +56,7 @@ export class AddonsService {
     limit: number = 10,
     search?: string,
     itemId?: string,
+    categoryType?: string,
   ): Promise<{
     data: Addon[];
     total: number;
@@ -78,6 +79,12 @@ export class AddonsService {
 
     if (itemId) {
       queryBuilder.andWhere('addon.itemId = :itemId', { itemId });
+    }
+
+    if (categoryType) {
+      queryBuilder.andWhere('addon.category_type = :categoryType', {
+        categoryType,
+      });
     }
 
     queryBuilder

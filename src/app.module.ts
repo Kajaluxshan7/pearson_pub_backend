@@ -22,6 +22,7 @@ import { PublicApiModule } from './public-api/public-api.module';
     ConfigModule.forRoot({
       isGlobal: true, // Makes the configuration available globally
       envFilePath: ['.env.development', '.env'], // Specify the path to your environment file
+      // envFilePath: '.develop.env', // Specify the path to your environment file
     }),
     TypeOrmModule.forRootAsync({
       // Use forRootAsync for async configuration
