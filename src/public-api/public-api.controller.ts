@@ -24,4 +24,29 @@ export class PublicApiController {
   async getContactInfo() {
     return this.publicApiService.getContactInfo();
   }
+
+  @Get('specials')
+  async getSpecials() {
+    return this.publicApiService.getSpecialsData();
+  }
+
+  @Get('specials/daily')
+  async getDailySpecials() {
+    return this.publicApiService.getDailySpecials();
+  }
+
+  @Get('specials/seasonal')
+  async getSeasonalSpecials() {
+    return this.publicApiService.getSeasonalSpecials();
+  }
+
+  @Get('specials/latenight')
+  async getLateNightSpecials() {
+    return this.publicApiService.getLateNightSpecials();
+  }
+
+  @Get('stories')
+  async getStories() {
+    return this.publicApiService.getStoriesData();
+  }
 }

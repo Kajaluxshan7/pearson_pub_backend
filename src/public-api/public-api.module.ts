@@ -6,6 +6,7 @@ import { ItemsModule } from '../items/items.module';
 import { EventsModule } from '../events/events.module';
 import { OperationHoursModule } from '../operation-hours/operation-hours.module';
 import { SpecialsModule } from '../specials/specials.module';
+import { StoriesModule } from '../stories/stories.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { SpecialsModule } from '../specials/specials.module';
     EventsModule,
     OperationHoursModule,
     SpecialsModule,
+    StoriesModule,
   ],
   controllers: [PublicApiController],
   providers: [PublicApiService],
