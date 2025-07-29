@@ -29,11 +29,26 @@ export class Item {
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: false })
-  original_price: number;
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  original_price: number | null;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: false })
-  price: number;
+  @Column({
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    nullable: true,
+    default: null,
+  })
+  discount: number | null;
+
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    default: null,
+  })
+  price: number | null;
 
   @Column({ type: 'text', array: true, default: '{}' })
   ingredients: string[];

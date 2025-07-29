@@ -24,12 +24,16 @@ export class CreateItemDto {
   categoryId: string;
 
   @IsNumber()
-  @IsNotEmpty()
-  original_price: number;
+  @IsOptional()
+  original_price?: number;
 
   @IsNumber()
-  @IsNotEmpty()
-  price: number;
+  @IsOptional()
+  discount?: number;
+
+  @IsNumber()
+  @IsOptional()
+  price?: number;
 
   @IsArray()
   @IsOptional()

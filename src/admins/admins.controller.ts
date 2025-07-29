@@ -37,6 +37,7 @@ export class AdminsController {
   create(@Body() createAdminDto: CreateAdminDto) {
     return this.adminsService.create(createAdminDto);
   }
+
   @Get()
   @Roles(AdminRole.SUPERADMIN, AdminRole.ADMIN)
   findAll(@Request() req) {
@@ -66,11 +67,28 @@ export class AdminsController {
     );
   }
 
+  @Patch('profile')
+  @Roles(AdminRole.SUPERADMIN, AdminRole.ADMIN)
+  updateProfile(@Body() updateAdminDto: UpdateAdminDto, @Request() req) {
+    return this.adminsService.updateProfile(req.user.id, updateAdminDto);
+  }
+
+  @Post('profile/avatar')
+  @Roles(AdminRole.SUPERADMIN, AdminRole.ADMIN)
+  @UseInterceptors(FileInterceptor('avatar'))
+  async uploadAvatar(
+    @UploadedFile() file: Express.Multer.File,
+    @Request() req,
+  ) {
+    return this.adminsService.uploadAvatar(req.user.id, file);
+  }
+
   @Get(':id')
   @Roles(AdminRole.SUPERADMIN, AdminRole.ADMIN)
   findOne(@Param('id') id: string) {
     return this.adminsService.findOne(id);
   }
+
   @Patch(':id')
   @Roles(AdminRole.SUPERADMIN)
   update(
@@ -85,6 +103,7 @@ export class AdminsController {
       req.user.role,
     );
   }
+
   @Delete(':id')
   @Roles(AdminRole.SUPERADMIN)
   remove(@Param('id') id: string, @Request() req) {
@@ -95,24 +114,5 @@ export class AdminsController {
   @Roles(AdminRole.SUPERADMIN)
   toggleStatus(@Param('id') id: string, @Request() req) {
     return this.adminsService.toggleStatus(id, req.user.id, req.user.role);
-  }
-
-  @Patch('profile')
-  @Roles(AdminRole.SUPERADMIN, AdminRole.ADMIN)
-  updateProfile(
-    @Body() updateAdminDto: UpdateAdminDto,
-    @Request() req,
-  ) {
-    return this.adminsService.updateProfile(req.user.id, updateAdminDto);
-  }
-
-  @Post('profile/avatar')
-  @Roles(AdminRole.SUPERADMIN, AdminRole.ADMIN)
-  @UseInterceptors(FileInterceptor('avatar'))
-  async uploadAvatar(
-    @UploadedFile() file: Express.Multer.File,
-    @Request() req,
-  ) {
-    return this.adminsService.uploadAvatar(req.user.id, file);
   }
 }

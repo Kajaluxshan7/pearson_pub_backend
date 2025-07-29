@@ -41,16 +41,35 @@ export class OperationHoursService {
       queryBuilder.where('operationHour.day = :day', { day });
     }
 
-    queryBuilder
-      .orderBy('operationHour.day', 'ASC')
-      .skip((page - 1) * limit)
-      .take(limit);
+    // Custom ordering for days of the week
+    const orderMap = {
+      monday: 1,
+      tuesday: 2,
+      wednesday: 3,
+      thursday: 4,
+      friday: 5,
+      saturday: 6,
+      sunday: 7,
+    };
 
     const [data, total] = await queryBuilder.getManyAndCount();
+
+    // Sort the data manually
+    const sortedData = data.sort((a, b) => {
+      const orderA = orderMap[a.day] || 8;
+      const orderB = orderMap[b.day] || 8;
+      return orderA - orderB;
+    });
+
+    // Apply pagination manually
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedData = sortedData.slice(startIndex, endIndex);
+
     const totalPages = Math.ceil(total / limit);
 
     return {
-      data,
+      data: paginatedData,
       total,
       page,
       totalPages,

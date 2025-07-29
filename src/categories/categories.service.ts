@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Category } from './entities/category.entity';
+import { Item } from '../items/entities/item.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
@@ -10,6 +15,8 @@ export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private categoriesRepository: Repository<Category>,
+    @InjectRepository(Item)
+    private itemsRepository: Repository<Item>,
   ) {}
 
   async create(
@@ -95,6 +102,18 @@ export class CategoriesService {
 
   async remove(id: string): Promise<void> {
     const category = await this.findOne(id);
+
+    // Check if there are items associated with this category
+    const itemCount = await this.itemsRepository.count({
+      where: { categoryId: id },
+    });
+
+    if (itemCount > 0) {
+      throw new BadRequestException(
+        `Cannot delete category "${category.name}" because it has ${itemCount} associated item(s). Please remove or reassign the items first.`,
+      );
+    }
+
     await this.categoriesRepository.remove(category);
   }
 }

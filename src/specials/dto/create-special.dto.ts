@@ -4,11 +4,11 @@ import {
   IsString,
   IsOptional,
   IsUUID,
-  IsNumber,
-  IsBoolean,
   IsDateString,
   ValidateIf,
+  IsBoolean,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { SpecialTypeEnum } from '../../common/enums';
 
 export class CreateSpecialDto {
@@ -16,50 +16,50 @@ export class CreateSpecialDto {
   @IsNotEmpty()
   special_type: SpecialTypeEnum;
 
+  // For daily specials - weekday required
   @ValidateIf((o) => o.special_type === 'daily')
   @IsUUID()
   @IsNotEmpty()
   specialsDayId?: string;
 
+  // For seasonal specials - season name required
+  @ValidateIf((o) => o.special_type === 'seasonal')
   @IsString()
   @IsNotEmpty()
-  name: string;
+  season_name?: string;
 
   @IsString()
   @IsOptional()
   description?: string;
 
-  @IsNumber()
-  @IsNotEmpty()
-  price: number;
-
-  @IsBoolean()
+  @IsString()
   @IsOptional()
-  from_menu?: boolean;
+  image_url?: string;
 
-  @IsUUID()
   @IsOptional()
-  menuItemId?: string;
+  image_urls?: string[];
 
-  @IsUUID()
-  @IsOptional()
-  categoryId?: string;
-
-  @ValidateIf(
-    (o) => o.special_type === 'seasonal' || o.special_type === 'latenight',
-  )
+  // For seasonal specials - start datetime required
+  @ValidateIf((o) => o.special_type === 'seasonal')
   @IsDateString()
   @IsNotEmpty()
-  seasonal_start_date?: Date;
+  seasonal_start_datetime?: Date;
 
-  @ValidateIf(
-    (o) => o.special_type === 'seasonal' || o.special_type === 'latenight',
-  )
+  // For seasonal specials - end datetime required
+  @ValidateIf((o) => o.special_type === 'seasonal')
   @IsDateString()
-  @IsOptional()
-  seasonal_end_date?: Date;
+  @IsNotEmpty()
+  seasonal_end_datetime?: Date;
 
   @IsUUID()
   @IsOptional()
   lastEditedByAdminId?: string;
+
+  // For removing individual existing images during update
+  @IsOptional()
+  removeImages?: string[];
+
+  // For keeping specific existing images during update
+  @IsOptional()
+  existingImages?: string[];
 }

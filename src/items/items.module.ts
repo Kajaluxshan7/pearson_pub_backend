@@ -3,10 +3,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ItemsService } from './items.service';
 import { ItemsController } from './items.controller';
 import { Item } from './entities/item.entity';
+import { Addon } from '../addons/entities/addon.entity';
 import { FileUploadService } from '../common/services/file-upload.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Item])],
+  imports: [TypeOrmModule.forFeature([Item, Addon])],
   controllers: [ItemsController],
   providers: [ItemsService, FileUploadService],
   exports: [ItemsService],

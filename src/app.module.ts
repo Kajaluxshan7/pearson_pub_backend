@@ -13,16 +13,16 @@ import { OperationHoursModule } from './operation-hours/operation-hours.module';
 import { SpecialsModule } from './specials/specials.module';
 import { WingSaucesModule } from './wing-sauces/wing-sauces.module';
 import { SubstituteSidesModule } from './substitute-sides/substitute-sides.module';
-import { ItemAddonsRelationsModule } from './item-addons-relations/item-addons-relations.module';
 import { TasksModule } from './tasks/tasks.module';
 import { PublicApiModule } from './public-api/public-api.module';
+import { StoriesModule } from './stories/stories.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // Makes the configuration available globally
-      envFilePath: ['.env.development', '.env'], // Specify the path to your environment file
-      // envFilePath: '.develop.env', // Specify the path to your environment file
+      // envFilePath: ['.env.development', '.env'], // Specify the path to your environment file
+      envFilePath: '.develop.env', // Specify the path to your environment file
     }),
     TypeOrmModule.forRootAsync({
       // Use forRootAsync for async configuration
@@ -75,9 +75,9 @@ import { PublicApiModule } from './public-api/public-api.module';
     SpecialsModule,
     WingSaucesModule,
     SubstituteSidesModule,
-    ItemAddonsRelationsModule,
     TasksModule,
     PublicApiModule,
+    StoriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -10,16 +10,13 @@ import {
 } from 'typeorm';
 import { SpecialTypeEnum } from '../../common/enums';
 import { SpecialsDay } from './specials-day.entity';
-import { Item } from '../../items/entities/item.entity';
-import { Category } from '../../categories/entities/category.entity';
 import { Admin } from '../../admins/entities/admin.entity';
 
 @Entity('specials')
 @Check(`
-    (special_type = 'daily' AND specials_day_id IS NOT NULL AND seasonal_start_date IS NULL AND seasonal_end_date IS NULL) OR
-    (special_type IN ('seasonal', 'latenight') AND specials_day_id IS NULL AND seasonal_start_date IS NOT NULL) OR
-    (menu_item_id IS NOT NULL AND category_id IS NULL) OR
-    (menu_item_id IS NULL AND category_id IS NOT NULL)
+    (special_type = 'daily' AND specials_day_id IS NOT NULL AND seasonal_start_datetime IS NULL AND seasonal_end_datetime IS NULL AND season_name IS NULL) OR
+    (special_type = 'seasonal' AND specials_day_id IS NULL AND seasonal_start_datetime IS NOT NULL AND seasonal_end_datetime IS NOT NULL AND season_name IS NOT NULL) OR
+    (special_type = 'latenight' AND specials_day_id IS NULL AND seasonal_start_datetime IS NULL AND seasonal_end_datetime IS NULL AND season_name IS NULL)
   `)
 export class Special {
   @PrimaryGeneratedColumn('uuid')
@@ -32,46 +29,30 @@ export class Special {
   })
   special_type: SpecialTypeEnum;
 
-  @ManyToOne(() => SpecialsDay, (specialsDay) => specialsDay.specials, {
-    nullable: true,
-  })
+  @ManyToOne(() => SpecialsDay, { nullable: true })
   @JoinColumn({ name: 'specials_day_id' })
   specialsDay: SpecialsDay;
 
   @Column({ name: 'specials_day_id', type: 'uuid', nullable: true })
   specialsDayId: string;
 
-  @Column({ type: 'text', nullable: false })
-  name: string;
+  @Column({ type: 'text', nullable: true })
+  season_name: string;
 
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: false })
-  price: number;
+  @Column({ type: 'text', nullable: true })
+  image_url: string;
 
-  @Column({ type: 'boolean', default: false })
-  from_menu: boolean;
+  @Column({ type: 'json', nullable: true })
+  image_urls: string[];
 
-  @ManyToOne(() => Item, { nullable: true })
-  @JoinColumn({ name: 'menu_item_id' })
-  menuItem: Item;
+  @Column({ type: 'timestamp', nullable: true })
+  seasonal_start_datetime: Date;
 
-  @Column({ name: 'menu_item_id', type: 'uuid', nullable: true })
-  menuItemId: string;
-
-  @ManyToOne(() => Category, { nullable: true })
-  @JoinColumn({ name: 'category_id' })
-  category: Category;
-
-  @Column({ name: 'category_id', type: 'uuid', nullable: true })
-  categoryId: string;
-
-  @Column({ type: 'date', nullable: true })
-  seasonal_start_date: Date;
-
-  @Column({ type: 'date', nullable: true })
-  seasonal_end_date: Date;
+  @Column({ type: 'timestamp', nullable: true })
+  seasonal_end_datetime: Date;
 
   @ManyToOne(() => Admin, { nullable: false })
   @JoinColumn({ name: 'last_edited_by_admin_id' })
