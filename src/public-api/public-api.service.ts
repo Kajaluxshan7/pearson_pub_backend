@@ -49,7 +49,7 @@ export class PublicApiService {
         specialsResponse,
         operationHoursResponse,
       ] = await Promise.all([
-        this.categoriesService.findAll(1, 50), // Get all categories
+        this.categoriesService.findAll(1, 1000), // Get all categories
         this.itemsService.findAll(
           1,
           20,
@@ -59,9 +59,9 @@ export class PublicApiService {
           true,
           true,
         ), // Featured & visible items
-        this.itemsService.findAll(1, 100, undefined, undefined, true, true), // All available & visible items
-        this.eventsService.findAll(1, 10), // Upcoming events
-        this.specialsService.findAll(1, 20), // Today's specials
+        this.itemsService.findAll(1, 10000, undefined, undefined, true, true), // All available & visible items
+        this.eventsService.findAll(1, 100), // Fetch more events
+        this.specialsService.findAll(1, 100), // Today's specials
         this.operationHoursService.findAll(1, 10), // Operation hours
       ]);
 
@@ -95,8 +95,15 @@ export class PublicApiService {
   async getMenuData() {
     try {
       const [categoriesResponse, itemsResponse] = await Promise.all([
-        this.categoriesService.findAll(1, 50),
-        this.itemsService.findAll(1, 200, undefined, undefined, true, true), // All available & visible items
+        this.categoriesService.findAll(1, 1000), // Increase categories limit
+        this.itemsService.findAll(
+          1,
+          10000,
+          undefined,
+          undefined,
+          undefined,
+          true,
+        ), // Fetch all visible items (both available and unavailable)
       ]);
 
       // Group items by category
@@ -119,7 +126,7 @@ export class PublicApiService {
 
   async getEventsData() {
     try {
-      const eventsResponse = await this.eventsService.findAll(1, 50);
+      const eventsResponse = await this.eventsService.findAll(1, 1000); // Fetch more events
       
       // Helper function to format date to readable format
       const formatDate = (date: Date | string): string => {
