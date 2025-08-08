@@ -1,4 +1,6 @@
+// tsconfig.build.json
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
+  "compilerOptions": { "outDir": "./dist", "rootDir": "./src", "target": "ESNext", "strict": true },
+  "include": ["src/**/*", "data-source.ts"]
 }

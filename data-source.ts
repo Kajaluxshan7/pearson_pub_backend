@@ -1,55 +1,50 @@
+// data-source.ts (keep at repo root or move into src — both ok)
+// ✅ Use paths relative to the compiled folder (dist), not /src
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
+import path from 'node:path';
 
-// Load environment variables
-// In Docker, .env will be mounted, otherwise use .develop.env
+// Load env: in Docker you'll pass .env; locally you may use .develop.env
 const envFile = process.env.MIGRATION_MODE ? '.env' : '.develop.env';
 config({ path: envFile });
 
-console.log(`🔧 Loading environment from: ${envFile}`);
-console.log(`🚀 Migration mode: ${process.env.MIGRATION_MODE || 'false'}`);
-console.log(`🌍 Node environment: ${process.env.NODE_ENV || 'development'}`);
-
-// Parse DATABASE_URL or use individual variables
-let databaseConfig;
-
 const databaseUrl = process.env.DATABASE_URL;
+let databaseConfig: any;
 if (databaseUrl) {
-  console.log('📊 Using DATABASE_URL configuration');
-  // Parse DATABASE_URL: postgresql://username:password@host:port/database
   const url = new URL(databaseUrl);
   databaseConfig = {
     host: url.hostname,
-    port: parseInt(url.port) || 5432,
-    username: url.username,
-    password: url.password,
-    database: url.pathname.slice(1), // Remove leading slash
+    port: Number(url.port || 5432),
+    username: decodeURIComponent(url.username),
+    password: decodeURIComponent(url.password),
+    database: url.pathname.slice(1),
   };
 } else {
-  console.log('📊 Using individual environment variables');
-  // Use individual environment variables
   databaseConfig = {
     host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432'),
+    port: Number(process.env.DB_PORT || 5432),
     username: process.env.DB_USERNAME || 'postgres',
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE || 'pearson_test',
+    password: process.env.DB_PASSWORD || '',
+    database: process.env.DB_DATABASE || 'pearson_db',
   };
 }
 
-console.log(
-  `📋 Database config: ${databaseConfig.username}@${databaseConfig.host}:${databaseConfig.port}/${databaseConfig.database}`,
-);
+// IMPORTANT: __dirname is `dist/` at runtime.
+// Do NOT put `/src/` in these globs.
+const ENTITIES_GLOB = path.join(__dirname, '**', '*.entity.{js,ts}');
+const MIGRATIONS_GLOB = path.join(__dirname, 'migrations', '*.{js,ts}');
 
 const AppDataSource = new DataSource({
   type: 'postgres',
   ...databaseConfig,
-  entities: [__dirname + '/src/**/*.entity{.ts,.js}'],
-  migrations: [__dirname + '/src/migrations/*{.ts,.js}'],
+  entities: [ENTITIES_GLOB],
+  migrations: [MIGRATIONS_GLOB],
   migrationsTableName: 'migrations_history',
-  synchronize: false, // Always false for migrations
+  synchronize: false,
   logging: process.env.MIGRATION_MODE ? ['error'] : ['query', 'error'],
-  ssl: false, // Disable SSL for local PostgreSQL connections
+  // If your DB requires SSL in prod, toggle via env:
+  // ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
+  ssl: false,
 });
 
 export default AppDataSource;
