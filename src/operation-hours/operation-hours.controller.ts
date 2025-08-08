@@ -30,6 +30,17 @@ export class OperationHoursController {
     return this.operationHoursService.getCount();
   }
 
+  @Get('status')
+  getCurrentStatus() {
+    return this.operationHoursService.getCurrentOperationStatus();
+  }
+
+  @Get('with-status')
+  @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
+  getAllWithStatus() {
+    return this.operationHoursService.getAllWithStatus();
+  }
+
   @Post()
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
   async create(

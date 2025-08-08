@@ -14,7 +14,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 async function bootstrap() {
-  const port = process.env.PORT || 5000;
+  const port = 5000;
   console.log('🚀 Starting application on port:', port);
 
   const app = await NestFactory.create(AppModule); // Enable CORS

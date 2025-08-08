@@ -54,13 +54,17 @@ export class FileUploadService {
     }
 
     if (!this.useAWS) {
-      // For development without AWS credentials, return a mock URL
-      const fileExtension = file.originalname.split('.').pop();
-      const fileName = `${folder}/${uuidv4()}.${fileExtension}`;
-      console.log(`📸 Mock upload: ${fileName} (${file.size} bytes)`);
+      // For development without AWS credentials, create a base64 data URL for local use
+      const base64Data = file.buffer.toString('base64');
+      const dataUrl = `data:${file.mimetype};base64,${base64Data}`;
+
+      console.log(
+        `📸 Local upload: ${file.originalname} (${file.size} bytes) - converted to base64 data URL`,
+      );
+
       return {
-        url: `https://mock-s3-url.com/${fileName}`,
-        signedUrl: `https://mock-s3-url.com/${fileName}?presigned=true`,
+        url: dataUrl,
+        signedUrl: dataUrl,
       };
     }
 
@@ -107,7 +111,14 @@ export class FileUploadService {
   async deleteFile(fileUrl: string): Promise<void> {
     if (!this.useAWS) {
       // For development without AWS credentials, just log the deletion
-      console.log(`🗑️ Mock delete: ${fileUrl}`);
+      // Check if it's a data URL (base64 image)
+      if (fileUrl.startsWith('data:')) {
+        console.log(
+          `🗑️ Local delete: base64 data URL (${fileUrl.substring(0, 50)}...)`,
+        );
+      } else {
+        console.log(`🗑️ Mock delete: ${fileUrl}`);
+      }
       return;
     }
 
@@ -135,7 +146,11 @@ export class FileUploadService {
 
   async getSignedUrl(fileUrl: string): Promise<string> {
     if (!this.useAWS) {
-      // For development, return the original URL with a mock query parameter
+      // For development, if it's already a data URL, return as-is
+      if (fileUrl.startsWith('data:')) {
+        return fileUrl;
+      }
+      // Otherwise return the original URL with a mock query parameter
       return `${fileUrl}?presigned=true&expires=${Date.now() + 3600000}`;
     }
 

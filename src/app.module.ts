@@ -16,6 +16,8 @@ import { SubstituteSidesModule } from './substitute-sides/substitute-sides.modul
 import { TasksModule } from './tasks/tasks.module';
 import { PublicApiModule } from './public-api/public-api.module';
 import { StoriesModule } from './stories/stories.module';
+import { TimezoneService } from './common/services/timezone.service';
+import { HealthController } from './common/health.controller';
 
 @Module({
   imports: [
@@ -79,7 +81,8 @@ import { StoriesModule } from './stories/stories.module';
     PublicApiModule,
     StoriesModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [AppController, HealthController],
+  providers: [AppService, TimezoneService],
+  exports: [TimezoneService],
 })
 export class AppModule {}

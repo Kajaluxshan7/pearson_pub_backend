@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Event } from './entities/event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { FileUploadService } from '../common/services/file-upload.service';
+import { TimezoneService } from '../common/services/timezone.service';
 
 @Injectable()
 export class EventsService {
@@ -12,14 +13,25 @@ export class EventsService {
     @InjectRepository(Event)
     private eventsRepository: Repository<Event>,
     private fileUploadService: FileUploadService,
+    private timezoneService: TimezoneService,
   ) {}
 
   async create(
     createEventDto: CreateEventDto,
     adminId: string,
   ): Promise<Event> {
+    // Handle datetime strings that may already be in UTC format
+    const startDateUtc = this.timezoneService.parseEventDateTime(
+      createEventDto.start_date,
+    );
+    const endDateUtc = this.timezoneService.parseEventDateTime(
+      createEventDto.end_date,
+    );
+
     const event = this.eventsRepository.create({
       ...createEventDto,
+      start_date: startDateUtc,
+      end_date: endDateUtc,
       lastEditedByAdminId: adminId,
     });
     return this.eventsRepository.save(event);
@@ -51,11 +63,15 @@ export class EventsService {
     }
 
     if (startDate && endDate) {
+      // Convert Eastern Time dates to UTC for database queries
+      const startDateUtc = this.timezoneService.convertEasternToUtc(startDate);
+      const endDateUtc = this.timezoneService.convertEasternToUtc(endDate);
+
       queryBuilder.andWhere(
         'event.start_date BETWEEN :startDate AND :endDate',
         {
-          startDate,
-          endDate,
+          startDate: startDateUtc,
+          endDate: endDateUtc,
         },
       );
     }
@@ -66,10 +82,47 @@ export class EventsService {
       .take(limit);
 
     const [data, total] = await queryBuilder.getManyAndCount();
+
+    // Add timezone-aware computed properties to each event
+    const eventsWithTimezone = data.map((event) => ({
+      ...event,
+      status: this.timezoneService.calculateEventStatus(
+        event.start_date,
+        event.end_date,
+      ),
+      dateRange: this.timezoneService.formatEventDateRange(
+        event.start_date,
+        event.end_date,
+      ),
+      startDateEastern: this.timezoneService.convertUtcToEastern(
+        event.start_date,
+      ),
+      endDateEastern: this.timezoneService.convertUtcToEastern(event.end_date),
+    }));
     const totalPages = Math.ceil(total / limit);
 
+    // Generate signed URLs for images
+    const dataWithSignedUrls = await Promise.all(
+      eventsWithTimezone.map(async (event) => {
+        if (event.images && event.images.length > 0) {
+          try {
+            const signedUrls =
+              await this.fileUploadService.getMultipleSignedUrls(event.images);
+            return { ...event, images: signedUrls };
+          } catch (error) {
+            console.warn(
+              `Failed to generate signed URLs for event ${event.id}:`,
+              error,
+            );
+            return event;
+          }
+        }
+        return event;
+      }),
+    );
+
     return {
-      data,
+      data: dataWithSignedUrls,
       total,
       page,
       totalPages,
@@ -86,6 +139,21 @@ export class EventsService {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
 
+    // Generate signed URLs for images
+    if (event.images && event.images.length > 0) {
+      try {
+        const signedUrls = await this.fileUploadService.getMultipleSignedUrls(
+          event.images,
+        );
+        event.images = signedUrls;
+      } catch (error) {
+        console.warn(
+          `Failed to generate signed URLs for event ${event.id}:`,
+          error,
+        );
+      }
+    }
+
     return event;
   }
 
@@ -96,7 +164,26 @@ export class EventsService {
   ): Promise<Event> {
     const event = await this.findOne(id);
 
-    Object.assign(event, updateEventDto);
+    // Handle datetime strings that may already be in UTC format if provided
+    const updateData: Partial<Event> = {
+      name: updateEventDto.name,
+      description: updateEventDto.description,
+      images: updateEventDto.images,
+    };
+
+    // Handle date fields with proper timezone conversion
+    if (updateEventDto.start_date) {
+      updateData.start_date = this.timezoneService.parseEventDateTime(
+        updateEventDto.start_date,
+      );
+    }
+    if (updateEventDto.end_date) {
+      updateData.end_date = this.timezoneService.parseEventDateTime(
+        updateEventDto.end_date,
+      );
+    }
+
+    Object.assign(event, updateData);
     event.lastEditedByAdminId = adminId;
 
     return this.eventsRepository.save(event);

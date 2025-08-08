@@ -11,13 +11,22 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     });
   }
   async validate(email: string, password: string): Promise<any> {
-    console.log('LocalStrategy.validate called with:', { email, password: '***' });
+    console.log('LocalStrategy.validate called with:', {
+      email,
+      password: '***',
+    });
     const admin = await this.authService.validateAdmin(email, password);
-    console.log('LocalStrategy.validate result:', admin ? 'Admin found' : 'Admin not found');
+    console.log(
+      'LocalStrategy.validate result:',
+      admin ? 'Admin found' : 'Admin not found',
+    );
     if (!admin) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    console.log('LocalStrategy.validate returning admin:', { id: admin.id, email: admin.email });
+    console.log('LocalStrategy.validate returning admin:', {
+      id: admin.id,
+      email: admin.email,
+    });
     return admin;
   }
 }

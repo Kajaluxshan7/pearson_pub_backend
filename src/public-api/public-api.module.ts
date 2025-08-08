@@ -7,6 +7,8 @@ import { EventsModule } from '../events/events.module';
 import { OperationHoursModule } from '../operation-hours/operation-hours.module';
 import { SpecialsModule } from '../specials/specials.module';
 import { StoriesModule } from '../stories/stories.module';
+import { FileUploadService } from '../common/services/file-upload.service';
+import { TimezoneService } from '../common/services/timezone.service';
 
 @Module({
   imports: [
@@ -18,6 +20,6 @@ import { StoriesModule } from '../stories/stories.module';
     StoriesModule,
   ],
   controllers: [PublicApiController],
-  providers: [PublicApiService],
+  providers: [PublicApiService, FileUploadService, TimezoneService],
 })
 export class PublicApiModule {}

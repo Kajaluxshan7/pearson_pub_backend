@@ -48,10 +48,10 @@ export class Special {
   @Column({ type: 'json', nullable: true })
   image_urls: string[];
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   seasonal_start_datetime: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   seasonal_end_datetime: Date;
 
   @ManyToOne(() => Admin, { nullable: false })
@@ -61,13 +61,16 @@ export class Special {
   @Column({ name: 'last_edited_by_admin_id', type: 'uuid', nullable: false })
   lastEditedByAdminId: string;
 
-  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
   @UpdateDateColumn({
-    type: 'timestamp',
+    type: 'timestamptz',
     default: () => 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
   updated_at: Date;
+
+  @Column({ type: 'varchar', length: 50, default: 'America/Toronto' })
+  timezone: string;
 }

@@ -1,4 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+} from 'typeorm';
 import { AdminRole } from '../../admins/entities/admin.entity';
 
 @Entity('admin_invitations')
@@ -12,10 +17,10 @@ export class AdminInvitation {
   @Column({ nullable: false })
   token_hash: string;
 
-  @Column({ 
-    type: 'enum', 
-    enum: AdminRole, 
-    default: AdminRole.ADMIN 
+  @Column({
+    type: 'enum',
+    enum: AdminRole,
+    default: AdminRole.ADMIN,
   })
   role: AdminRole;
 

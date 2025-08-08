@@ -11,7 +11,11 @@ import { FileUploadService } from '../common/services/file-upload.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Special, SpecialsDay])],
-  controllers: [SpecialsController, SpecialsPublicController, SpecialsDayController],
+  controllers: [
+    SpecialsController,
+    SpecialsPublicController,
+    SpecialsDayController,
+  ],
   providers: [SpecialsService, SpecialsDayService, FileUploadService],
   exports: [SpecialsService, SpecialsDayService],
 })

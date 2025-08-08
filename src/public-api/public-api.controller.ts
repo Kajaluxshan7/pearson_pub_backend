@@ -49,4 +49,9 @@ export class PublicApiController {
   async getStories() {
     return this.publicApiService.getStoriesData();
   }
+
+  @Get('operation-hours')
+  async getOperationHours() {
+    return this.publicApiService.getOperationHours();
+  }
 }

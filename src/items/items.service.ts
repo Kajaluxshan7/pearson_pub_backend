@@ -100,8 +100,28 @@ export class ItemsService {
     const [data, total] = await queryBuilder.getManyAndCount();
     const totalPages = Math.ceil(total / limit);
 
+    // Generate signed URLs for images
+    const dataWithSignedUrls = await Promise.all(
+      data.map(async (item) => {
+        if (item.images && item.images.length > 0) {
+          try {
+            const signedUrls =
+              await this.fileUploadService.getMultipleSignedUrls(item.images);
+            return { ...item, images: signedUrls };
+          } catch (error) {
+            console.warn(
+              `Failed to generate signed URLs for item ${item.id}:`,
+              error,
+            );
+            return item;
+          }
+        }
+        return item;
+      }),
+    );
+
     return {
-      data,
+      data: dataWithSignedUrls,
       total,
       page,
       totalPages,
@@ -116,6 +136,21 @@ export class ItemsService {
 
     if (!item) {
       throw new NotFoundException(`Item with ID ${id} not found`);
+    }
+
+    // Generate signed URLs for images
+    if (item.images && item.images.length > 0) {
+      try {
+        const signedUrls = await this.fileUploadService.getMultipleSignedUrls(
+          item.images,
+        );
+        item.images = signedUrls;
+      } catch (error) {
+        console.warn(
+          `Failed to generate signed URLs for item ${item.id}:`,
+          error,
+        );
+      }
     }
 
     return item;

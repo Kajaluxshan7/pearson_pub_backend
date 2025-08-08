@@ -26,7 +26,13 @@ import { AdminInvitation } from './entities/admin-invitation.entity';
     TypeOrmModule.forFeature([Admin, AdminInvitation]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, EmailService, LocalStrategy, JwtStrategy, GoogleStrategy],
+  providers: [
+    AuthService,
+    EmailService,
+    LocalStrategy,
+    JwtStrategy,
+    GoogleStrategy,
+  ],
   exports: [AuthService],
 })
 export class AuthModule {}

@@ -26,7 +26,7 @@ export class SpecialsService {
     // Validate business rules
     this.validateSpecialRules(createSpecialDto);
 
-    let imageUrls: string[] = [];
+    const imageUrls: string[] = [];
     let primaryImageUrl: string | undefined;
 
     if (images && images.length > 0) {
@@ -140,10 +140,10 @@ export class SpecialsService {
     // Validate business rules
     this.validateSpecialRules(updateSpecialDto);
 
-    let newImageUrls: string[] = [];
+    const newImageUrls: string[] = [];
     let newPrimaryImageUrl: string | undefined;
     let shouldDeleteOldImages = false;
-    let shouldRemoveImagesFromDb = false;
+    const shouldRemoveImagesFromDb = false;
 
     // Handle image update logic
     if (images && images.length > 0) {

@@ -27,15 +27,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    const admin = await this.adminRepository.findOne({ 
+    const admin = await this.adminRepository.findOne({
       where: { id: payload.sub },
-      select: ['id', 'email', 'role', 'is_verified', 'is_active']
+      select: ['id', 'email', 'role', 'is_verified', 'is_active'],
     });
-    
+
     if (!admin || !admin.is_verified || !admin.is_active) {
       throw new UnauthorizedException();
     }
-    
+
     return admin;
   }
 }

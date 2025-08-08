@@ -1,15 +1,21 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum AdminRole {
   SUPERADMIN = 'superadmin',
-  ADMIN = 'admin'
+  ADMIN = 'admin',
 }
 
 @Entity('admins')
 export class Admin {
   @PrimaryGeneratedColumn('uuid')
-  id: string; 
-  
+  id: string;
+
   @Column({ unique: true, nullable: false })
   email: string;
 
@@ -31,10 +37,10 @@ export class Admin {
   @Column({ type: 'text', nullable: true })
   address: string;
 
-  @Column({ 
-    type: 'enum', 
-    enum: AdminRole, 
-    default: AdminRole.ADMIN 
+  @Column({
+    type: 'enum',
+    enum: AdminRole,
+    default: AdminRole.ADMIN,
   })
   role: AdminRole;
 
@@ -47,6 +53,10 @@ export class Admin {
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+  @UpdateDateColumn({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    onUpdate: 'CURRENT_TIMESTAMP',
+  })
   updated_at: Date;
 }
