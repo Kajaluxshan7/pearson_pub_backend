@@ -23,7 +23,7 @@ export class SpecialsDayService {
       const specialsDay =
         this.specialsDayRepository.create(createSpecialsDayDto);
       return await this.specialsDayRepository.save(specialsDay);
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === '23505') {
         // Unique constraint violation
         throw new ConflictException('A day with this name already exists');
@@ -77,7 +77,7 @@ export class SpecialsDayService {
     try {
       await this.specialsDayRepository.update(id, updateSpecialsDayDto);
       return this.findOne(id);
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === '23505') {
         // Unique constraint violation
         throw new ConflictException('A day with this name already exists');

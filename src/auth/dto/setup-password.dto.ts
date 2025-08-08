@@ -2,11 +2,11 @@ import { IsString, MinLength, IsOptional } from 'class-validator';
 
 export class SetupPasswordDto {
   @IsString()
-  token: string;
+  token!: string;
 
   @IsString()
   @MinLength(6)
-  password: string;
+  password!: string;
 
   @IsOptional()
   @IsString()

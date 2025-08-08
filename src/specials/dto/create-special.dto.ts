@@ -6,24 +6,24 @@ import {
   IsUUID,
   IsDateString,
   ValidateIf,
-  IsBoolean,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
 import { SpecialTypeEnum } from '../../common/enums';
 
 export class CreateSpecialDto {
   @IsEnum(SpecialTypeEnum)
   @IsNotEmpty()
-  special_type: SpecialTypeEnum;
+  special_type!: SpecialTypeEnum;
 
   // For daily specials - weekday required
-  @ValidateIf((o) => o.special_type === 'daily')
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  @ValidateIf((o: any) => o.special_type === 'daily')
   @IsUUID()
   @IsNotEmpty()
   specialsDayId?: string;
 
   // For seasonal specials - season name required
-  @ValidateIf((o) => o.special_type === 'seasonal')
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  @ValidateIf((o: any) => o.special_type === 'seasonal')
   @IsString()
   @IsNotEmpty()
   season_name?: string;
@@ -40,13 +40,15 @@ export class CreateSpecialDto {
   image_urls?: string[];
 
   // For seasonal specials - start datetime required
-  @ValidateIf((o) => o.special_type === 'seasonal')
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  @ValidateIf((o: any) => o.special_type === 'seasonal')
   @IsDateString()
   @IsNotEmpty()
   seasonal_start_datetime?: Date;
 
   // For seasonal specials - end datetime required
-  @ValidateIf((o) => o.special_type === 'seasonal')
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  @ValidateIf((o: any) => o.special_type === 'seasonal')
   @IsDateString()
   @IsNotEmpty()
   seasonal_end_datetime?: Date;

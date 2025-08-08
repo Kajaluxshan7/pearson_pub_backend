@@ -48,7 +48,7 @@ export class PublicApiService {
 
     try {
       return await this.fileUploadService.getMultipleSignedUrls(images);
-    } catch (error) {
+    } catch (error: any) {
       console.warn(
         'Failed to generate signed URLs, returning original URLs:',
         error,
@@ -155,7 +155,7 @@ export class PublicApiService {
           },
         },
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching landing page content:', error);
       throw new Error('Failed to fetch landing page content');
     }
@@ -204,7 +204,7 @@ export class PublicApiService {
         categories: categoriesWithItems,
         totalItems: itemsResponse.total,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching menu data:', error);
       throw new Error('Failed to fetch menu data');
     }
@@ -220,7 +220,7 @@ export class PublicApiService {
         try {
           const dateObj = date instanceof Date ? date : new Date(date);
           return this.timezoneService.formatInEastern(dateObj, 'MMM dd, yyyy');
-        } catch (error) {
+        } catch (error: any) {
           console.warn('Error formatting date:', error);
           return '';
         }
@@ -298,7 +298,7 @@ export class PublicApiService {
         events,
         total: eventsResponse.total,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching events data:', error);
       throw new Error('Failed to fetch events data');
     }
@@ -328,7 +328,7 @@ export class PublicApiService {
           lng: -79.3871,
         },
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching contact info:', error);
       throw new Error('Failed to fetch contact info');
     }
@@ -341,7 +341,7 @@ export class PublicApiService {
         specials: specialsResponse.data,
         total: specialsResponse.total,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching specials data:', error);
       throw new Error('Failed to fetch specials data');
     }
@@ -406,7 +406,7 @@ export class PublicApiService {
         heading: `${currentDayName} Special`,
         total: todaySpecialsWithSignedUrls.length,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching daily specials:', error);
       throw new Error('Failed to fetch daily specials');
     }
@@ -459,7 +459,7 @@ export class PublicApiService {
         specials: seasonalSpecialsWithSignedUrls,
         total: seasonalSpecialsWithSignedUrls.length,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching seasonal specials:', error);
       throw new Error('Failed to fetch seasonal specials');
     }
@@ -497,7 +497,7 @@ export class PublicApiService {
         heading: 'Latenight Special',
         total: lateNightSpecialsWithSignedUrls.length,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching latenight specials:', error);
       throw new Error('Failed to fetch latenight specials');
     }
@@ -534,7 +534,7 @@ export class PublicApiService {
         stories: storiesWithSignedUrls,
         total: storiesResponse.total,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching stories:', error);
       throw new Error('Failed to fetch stories');
     }
@@ -563,7 +563,7 @@ export class PublicApiService {
         data: formattedHours,
         total: operationHoursResponse.total,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching operation hours:', error);
       throw new Error('Failed to fetch operation hours');
     }

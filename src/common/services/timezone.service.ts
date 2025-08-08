@@ -247,7 +247,7 @@ export class TimezoneService {
       }
 
       return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error checking business hours:', error);
       return false;
     }
@@ -276,7 +276,7 @@ export class TimezoneService {
       const dateTime = parseISO(`${today}T${timeString}:00`);
 
       return format(dateTime, 'h:mm a', { timeZone: this.TIMEZONE });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error formatting time for display:', error);
       return timeString;
     }
@@ -405,7 +405,7 @@ export class TimezoneService {
         `Could not find UTC equivalent for Toronto time: ${timeString}`,
       );
       return targetTorontoTime;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error converting Toronto time to UTC time:', error);
       // Return HH:MM format even on error
       return timeString.substring(0, 5); // Fallback to first 5 characters (HH:MM)
@@ -445,7 +445,7 @@ export class TimezoneService {
       const torontoDateTime = toZonedTime(utcDateTime, this.TIMEZONE);
 
       return format(torontoDateTime, 'HH:mm');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error converting UTC time to Toronto time:', error);
       // Return HH:MM format even on error
       return timeString.substring(0, 5); // Fallback to first 5 characters (HH:MM)
@@ -467,7 +467,7 @@ export class TimezoneService {
       return format(torontoDate, "yyyy-MM-dd'T'HH:mm", {
         timeZone: this.TIMEZONE,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error formatting for datetime input:', error);
       return '';
     }
@@ -487,7 +487,7 @@ export class TimezoneService {
       // Parse as if it's in Toronto timezone and convert to UTC
       const torontoDate = parseISO(dateTimeString);
       return fromZonedTime(torontoDate, this.TIMEZONE);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error parsing datetime input:', error);
       throw new Error('Invalid datetime format');
     }

@@ -10,7 +10,7 @@ export function TorontoDateTime() {
     if (!value) return null;
     try {
       return TimeService.formatTorontoString(value, 'yyyy-MM-dd HH:mm:ss zzz');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error transforming to Toronto datetime:', error);
       return value;
     }
@@ -27,7 +27,7 @@ export function TorontoDateTimeISO() {
     try {
       const torontoDate = TimeService.toTorontoFromUTC(value);
       return torontoDate.toISOString();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error transforming to Toronto ISO:', error);
       return value;
     }
@@ -43,7 +43,7 @@ export function FromTorontoDateTime() {
     if (!value) return null;
     try {
       return TimeService.toUTCFromToronto(value);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error transforming from Toronto datetime:', error);
       throw new Error(`Invalid datetime format: ${value}`);
     }
@@ -59,7 +59,7 @@ export function FromTorontoDateTimeInput() {
     if (!value) return null;
     try {
       return TimeService.parseTorontoInputToUTC(value);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error transforming from Toronto datetime input:', error);
       throw new Error(`Invalid datetime input format: ${value}`);
     }

@@ -274,7 +274,7 @@ export class SpecialsService {
         try {
           await this.fileUploadService.deleteFile(imageUrl);
           console.log('✅ Specific image deleted from S3:', imageUrl);
-        } catch (error) {
+        } catch (error: any) {
           console.error('❌ Failed to delete specific image from S3:', error);
         }
       }
@@ -287,7 +287,7 @@ export class SpecialsService {
             '✅ Old special image deleted from S3 (complete replacement):',
             existingSpecial.image_url,
           );
-        } catch (error) {
+        } catch (error: any) {
           console.error(
             '❌ Failed to delete old special image from S3:',
             error,
@@ -303,7 +303,7 @@ export class SpecialsService {
               '✅ Old special image deleted from S3 (complete replacement):',
               imageUrl,
             );
-          } catch (error) {
+          } catch (error: any) {
             console.error(
               '❌ Failed to delete old special image from S3:',
               error,
@@ -333,7 +333,7 @@ export class SpecialsService {
       try {
         await this.fileUploadService.deleteFile(special.image_url);
         console.log('✅ Special image deleted from S3:', special.image_url);
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ Failed to delete special image from S3:', error);
         // Continue with special deletion even if S3 deletion fails
       }
@@ -345,7 +345,7 @@ export class SpecialsService {
         try {
           await this.fileUploadService.deleteFile(imageUrl);
           console.log('✅ Special image deleted from S3:', imageUrl);
-        } catch (error) {
+        } catch (error: any) {
           console.error('❌ Failed to delete special image from S3:', error);
           // Continue with special deletion even if S3 deletion fails
         }

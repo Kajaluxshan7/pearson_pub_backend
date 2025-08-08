@@ -50,7 +50,7 @@ export class SpecialsController {
       );
       console.log('✅ Specials Controller - Create successful');
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Specials Controller - Create error:', error);
       throw error;
     }
@@ -142,7 +142,7 @@ export class SpecialsController {
       );
       console.log('✅ Specials Controller - Update successful');
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Specials Controller - Update error:', error);
       throw error;
     }
@@ -157,7 +157,7 @@ export class SpecialsController {
       const imageUrl = await this.specialsService.uploadImage(image);
       console.log('✅ Specials Controller - Image upload successful');
       return { imageUrl };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Specials Controller - Image upload error:', error);
       throw error;
     }
@@ -172,7 +172,7 @@ export class SpecialsController {
       const imageUrls = await this.specialsService.uploadImages(images);
       console.log('✅ Specials Controller - Multiple images upload successful');
       return { imageUrls };
-    } catch (error) {
+    } catch (error: any) {
       console.error(
         '❌ Specials Controller - Multiple images upload error:',
         error,
@@ -192,7 +192,7 @@ export class SpecialsController {
       await this.specialsService.deleteFile(decodeURIComponent(imageUrl));
       console.log('✅ Specials Controller - Delete image successful');
       return { message: 'Image deleted successfully' };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Specials Controller - Delete image error:', error);
       throw error;
     }
@@ -206,7 +206,7 @@ export class SpecialsController {
       await this.specialsService.remove(id);
       console.log('✅ Specials Controller - Delete successful');
       return { message: 'Special deleted successfully' };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Specials Controller - Delete error:', error);
       throw error;
     }

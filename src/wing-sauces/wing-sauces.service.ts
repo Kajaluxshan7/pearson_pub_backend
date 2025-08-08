@@ -26,7 +26,7 @@ export class WingSaucesService {
         lastEditedByAdminId: adminId,
       });
       return await this.wingSauceRepository.save(wingSauce);
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === '23505') {
         // Unique constraint violation
         throw new ConflictException(
@@ -92,7 +92,7 @@ export class WingSaucesService {
 
       await this.wingSauceRepository.update(id, updateData);
       return this.findOne(id);
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === '23505') {
         // Unique constraint violation
         throw new ConflictException(

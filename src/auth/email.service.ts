@@ -63,7 +63,7 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail(mailOptions);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending verification email:', error);
       throw new Error('Failed to send verification email');
     }
@@ -92,7 +92,7 @@ export class EmailService {
 
     try {
       htmlTemplate = fs.readFileSync(templatePath, 'utf8');
-    } catch (error) {
+    } catch (error: any) {
       // Fallback to inline HTML if template file is not found
       htmlTemplate = `
         <div style="max-width: 600px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif;">
@@ -149,7 +149,7 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail(mailOptions);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending admin invitation email:', error);
       throw new Error('Failed to send admin invitation email');
     }

@@ -44,7 +44,7 @@ export class SubstituteSidesController {
       );
       console.log('✅ SubstituteSides Controller - Create successful');
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ SubstituteSides Controller - Create error:', error);
       throw error;
     }
@@ -85,7 +85,7 @@ export class SubstituteSidesController {
       );
       console.log('✅ SubstituteSides Controller - Update successful');
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ SubstituteSides Controller - Update error:', error);
       throw error;
     }
@@ -99,7 +99,7 @@ export class SubstituteSidesController {
       await this.substituteSidesService.remove(id);
       console.log('✅ SubstituteSides Controller - Delete successful');
       return { message: 'Substitute side deleted successfully' };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ SubstituteSides Controller - Delete error:', error);
       throw error;
     }

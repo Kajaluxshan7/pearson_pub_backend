@@ -9,7 +9,8 @@ import {
 export class CreateStoryDto {
   @IsString()
   @IsNotEmpty()
-  story_name: string;
+  
+  story_name!: string;
 
   @IsString()
   @IsOptional()

@@ -58,10 +58,10 @@ export class AuthService {
         message: 'Email verified successfully! You can now log in.',
         admin: adminWithoutPassword,
       };
-    } catch (error) {
+    } catch (error: any) {
       if (
-        error.name === 'JsonWebTokenError' ||
-        error.name === 'TokenExpiredError'
+        (error as any).name === 'JsonWebTokenError' ||
+        (error as any).name === 'TokenExpiredError'
       ) {
         throw new BadRequestException('Invalid or expired verification token');
       }

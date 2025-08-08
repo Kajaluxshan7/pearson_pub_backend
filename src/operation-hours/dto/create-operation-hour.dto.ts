@@ -10,15 +10,17 @@ import { DayOfWeek } from '../entities/operation-hour.entity';
 export class CreateOperationHourDto {
   @IsEnum(DayOfWeek)
   @IsNotEmpty()
-  day: DayOfWeek;
+  day!: DayOfWeek;
 
   @IsString()
   @IsNotEmpty()
-  open_time: string;
+  
+  open_time!: string;
 
   @IsString()
   @IsNotEmpty()
-  close_time: string;
+  
+  close_time!: string;
 
   @IsBoolean()
   @IsOptional()

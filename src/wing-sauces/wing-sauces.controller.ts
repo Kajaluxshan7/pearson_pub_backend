@@ -39,7 +39,7 @@ export class WingSaucesController {
       );
       console.log('✅ WingSauces Controller - Create successful');
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ WingSauces Controller - Create error:', error);
       throw error;
     }
@@ -80,7 +80,7 @@ export class WingSaucesController {
       );
       console.log('✅ WingSauces Controller - Update successful');
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ WingSauces Controller - Update error:', error);
       throw error;
     }
@@ -94,7 +94,7 @@ export class WingSaucesController {
       await this.wingSaucesService.remove(id);
       console.log('✅ WingSauces Controller - Delete successful');
       return { message: 'Wing sauce deleted successfully' };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ WingSauces Controller - Delete error:', error);
       throw error;
     }

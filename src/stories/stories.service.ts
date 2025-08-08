@@ -199,7 +199,7 @@ export class StoriesService {
       if (newImageUrls.length > 0) {
         try {
           await this.fileUploadService.deleteMultipleFiles(newImageUrls);
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error cleaning up uploaded images:', error);
         }
       }
@@ -231,7 +231,7 @@ export class StoriesService {
         try {
           await this.fileUploadService.deleteFile(imageUrl);
           console.log('✅ Specific image deleted from S3:', imageUrl);
-        } catch (error) {
+        } catch (error: any) {
           console.error('❌ Failed to delete specific image from S3:', error);
         }
       }
@@ -257,7 +257,7 @@ export class StoriesService {
     if (story.images && story.images.length > 0) {
       try {
         await this.fileUploadService.deleteMultipleFiles(story.images);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error deleting story images from S3:', error);
         // Don't fail the deletion if S3 deletion fails
       }
@@ -303,7 +303,7 @@ export class StoriesService {
     // Remove image from S3
     try {
       await this.fileUploadService.deleteFile(imageUrl);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting image from S3:', error);
       // Continue with removal from database even if S3 deletion fails
     }

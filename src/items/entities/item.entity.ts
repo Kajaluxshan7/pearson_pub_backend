@@ -14,23 +14,29 @@ import { ItemsSizeEnum } from '../../common/enums';
 @Entity('items')
 export class Item {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  
+  id!: string;
 
   @ManyToOne(() => Category, { nullable: false })
   @JoinColumn({ name: 'category_id' })
-  category: Category;
+  
+  category!: Category;
 
   @Column({ name: 'category_id', type: 'uuid', nullable: false })
-  categoryId: string;
+  
+  categoryId!: string;
 
   @Column({ nullable: false })
-  name: string;
+  
+  name!: string;
 
   @Column({ type: 'text', nullable: true })
-  description: string;
+  
+  description!: string;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
-  original_price: number | null;
+  
+  original_price!: number | null;
 
   @Column({
     type: 'decimal',
@@ -39,7 +45,8 @@ export class Item {
     nullable: true,
     default: null,
   })
-  discount: number | null;
+  
+  discount!: number | null;
 
   @Column({
     type: 'decimal',
@@ -48,44 +55,53 @@ export class Item {
     nullable: true,
     default: null,
   })
-  price: number | null;
+  
+  price!: number | null;
 
   @Column({ type: 'text', array: true, default: '{}' })
-  ingredients: string[];
+  
+  ingredients!: string[];
   @Column({
     type: 'enum',
     enum: ItemsSizeEnum,
     array: true,
     default: '{}',
   })
-  sizes: ItemsSizeEnum[];
+  
+  sizes!: ItemsSizeEnum[];
 
   @Column({ type: 'text', array: true, default: '{}' })
-  images: string[];
+  
+  images!: string[];
 
   @Column({ default: true })
-  availability: boolean;
+  
+  availability!: boolean;
 
   @Column({ default: true })
-  visibility: boolean;
+  
+  visibility!: boolean;
 
   @Column({ default: false })
-  is_favourite: boolean;
+  
+  is_favourite!: boolean;
 
   @ManyToOne(() => Admin, { nullable: true })
   @JoinColumn({ name: 'last_edited_by_admin_id' })
-  lastEditedByAdmin: Admin;
+  
+  lastEditedByAdmin!: Admin;
 
   @Column({ name: 'last_edited_by_admin_id', type: 'uuid', nullable: true })
-  lastEditedByAdminId: string;
+  
+  lastEditedByAdminId!: string;
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  created_at: Date;
+  created_at!: Date;
 
   @UpdateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  updated_at: Date;
+  updated_at!: Date;
 }

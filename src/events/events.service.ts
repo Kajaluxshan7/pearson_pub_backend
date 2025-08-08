@@ -109,7 +109,7 @@ export class EventsService {
             const signedUrls =
               await this.fileUploadService.getMultipleSignedUrls(event.images);
             return { ...event, images: signedUrls };
-          } catch (error) {
+          } catch (error: any) {
             console.warn(
               `Failed to generate signed URLs for event ${event.id}:`,
               error,
@@ -146,7 +146,7 @@ export class EventsService {
           event.images,
         );
         event.images = signedUrls;
-      } catch (error) {
+      } catch (error: any) {
         console.warn(
           `Failed to generate signed URLs for event ${event.id}:`,
           error,
@@ -204,7 +204,7 @@ export class EventsService {
           ),
         );
         console.log('✅ Images cleaned up successfully');
-      } catch (error) {
+      } catch (error: any) {
         console.error('⚠️ Error cleaning up images:', error);
         // Continue with event deletion even if image cleanup fails
       }

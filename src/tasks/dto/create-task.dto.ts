@@ -9,7 +9,7 @@ import { TaskPriorityEnum } from '../entities/task.entity';
 
 export class CreateTaskDto {
   @IsString()
-  title: string;
+  title!: string;
 
   @IsOptional()
   @IsString()

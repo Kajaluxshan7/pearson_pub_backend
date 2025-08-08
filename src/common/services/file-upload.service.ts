@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class FileUploadService {
-  private s3Client: S3Client;
+  private s3Client!: S3Client;
   private bucketName: string;
   private useAWS: boolean;
 
@@ -94,7 +94,7 @@ export class FileUploadService {
       });
 
       return { url, signedUrl };
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading file to S3:', error);
       throw new Error('Failed to upload file');
     }
@@ -133,7 +133,7 @@ export class FileUploadService {
 
     try {
       await this.s3Client.send(command);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting file from S3:', error);
       throw new Error('Failed to delete file');
     }
@@ -167,7 +167,7 @@ export class FileUploadService {
       return await getSignedUrl(this.s3Client, command, {
         expiresIn: 3600, // 1 hour
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error generating signed URL:', error);
       throw new Error('Failed to generate signed URL');
     }

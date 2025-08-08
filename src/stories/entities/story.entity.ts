@@ -12,27 +12,35 @@ import { Admin } from '../../admins/entities/admin.entity';
 @Entity('stories')
 export class Story {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  
+  id!: string;
 
   @Column({ nullable: false })
-  story_name: string;
+  
+  story_name!: string;
 
   @Column({ type: 'text', nullable: true })
-  description: string;
+  
+  description!: string;
 
   @Column({ type: 'text', array: true, default: '{}' })
-  images: string[];
+  
+  images!: string[];
 
   @ManyToOne(() => Admin, { nullable: true })
   @JoinColumn({ name: 'last_edited_by_admin_id' })
-  lastEditedByAdmin: Admin;
+  
+  lastEditedByAdmin!: Admin;
 
   @Column({ name: 'last_edited_by_admin_id', type: 'uuid', nullable: true })
-  lastEditedByAdminId: string;
+  
+  lastEditedByAdminId!: string;
 
   @CreateDateColumn()
-  created_at: Date;
+  
+  created_at!: Date;
 
   @UpdateDateColumn()
-  updated_at: Date;
+  
+  updated_at!: Date;
 }

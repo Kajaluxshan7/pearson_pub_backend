@@ -11,7 +11,8 @@ import { DaysOfWeekEnum } from '../../common/enums';
 @Entity('specials_day')
 export class SpecialsDay {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  
+  id!: string;
 
   @Column({
     type: 'enum',
@@ -19,18 +20,20 @@ export class SpecialsDay {
     unique: true,
     nullable: false,
   })
-  day_name: DaysOfWeekEnum;
+  
+  day_name!: DaysOfWeekEnum;
 
   @OneToMany('Special', 'specialsDay')
-  specials: any[];
+  
+  specials!: any[];
 
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  created_at: Date;
+  created_at!: Date;
 
   @UpdateDateColumn({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
     onUpdate: 'CURRENT_TIMESTAMP',
   })
-  updated_at: Date;
+  updated_at!: Date;
 }

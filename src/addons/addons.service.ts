@@ -40,7 +40,7 @@ export class AddonsService {
         lastEditedByAdminId: adminId,
       });
       return this.addonsRepository.save(addon);
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === '23505') {
         // PostgreSQL unique constraint violation
         throw new ConflictException(
@@ -184,7 +184,7 @@ export class AddonsService {
       console.log('✅ Addon duplicated successfully:', duplicatedAddon);
 
       return duplicatedAddon;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Error duplicating addon:', error);
 
       // Handle unique constraint violation specifically

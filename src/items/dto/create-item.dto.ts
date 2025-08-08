@@ -13,7 +13,8 @@ import { ItemsSizeEnum } from '../../common/enums';
 export class CreateItemDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  
+  name!: string;
 
   @IsString()
   @IsOptional()
@@ -21,7 +22,8 @@ export class CreateItemDto {
 
   @IsUUID()
   @IsNotEmpty()
-  categoryId: string;
+  
+  categoryId!: string;
 
   @IsNumber()
   @IsOptional()

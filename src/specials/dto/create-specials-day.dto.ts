@@ -4,5 +4,5 @@ import { DaysOfWeekEnum } from '../../common/enums';
 export class CreateSpecialsDayDto {
   @IsEnum(DaysOfWeekEnum)
   @IsNotEmpty()
-  day_name: DaysOfWeekEnum;
+  day_name!: DaysOfWeekEnum;
 }

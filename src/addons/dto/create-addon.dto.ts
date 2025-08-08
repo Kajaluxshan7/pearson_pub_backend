@@ -9,7 +9,7 @@ import {
 export class CreateAddonDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @IsString()
   @IsOptional()
@@ -17,11 +17,11 @@ export class CreateAddonDto {
 
   @IsUUID()
   @IsNotEmpty()
-  itemId: string;
+  itemId!: string;
 
   @IsNumber()
   @IsNotEmpty()
-  price: number;
+  price!: number;
 
   @IsString()
   @IsOptional()

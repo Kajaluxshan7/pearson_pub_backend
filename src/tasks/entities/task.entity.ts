@@ -15,33 +15,42 @@ export enum TaskPriorityEnum {
 @Entity('tasks')
 export class Task {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  
+  id!: string;
 
   @Column({ type: 'varchar', length: 255 })
-  title: string;
+  
+  title!: string;
 
   @Column({ type: 'text', nullable: true })
-  description: string;
+  
+  description!: string;
 
   @Column({ type: 'boolean', default: false })
-  completed: boolean;
+  
+  completed!: boolean;
 
   @Column({
     type: 'enum',
     enum: TaskPriorityEnum,
     default: TaskPriorityEnum.MEDIUM,
   })
-  priority: TaskPriorityEnum;
+  
+  priority!: TaskPriorityEnum;
 
   @Column({ type: 'timestamp', nullable: true })
-  due_date: Date;
+  
+  due_date!: Date;
 
   @Column({ type: 'uuid', nullable: true })
-  lastEditedByAdminId: string;
+  
+  lastEditedByAdminId!: string;
 
   @CreateDateColumn()
-  created_at: Date;
+  
+  created_at!: Date;
 
   @UpdateDateColumn()
-  updated_at: Date;
+  
+  updated_at!: Date;
 }

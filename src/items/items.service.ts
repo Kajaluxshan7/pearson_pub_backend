@@ -108,7 +108,7 @@ export class ItemsService {
             const signedUrls =
               await this.fileUploadService.getMultipleSignedUrls(item.images);
             return { ...item, images: signedUrls };
-          } catch (error) {
+          } catch (error: any) {
             console.warn(
               `Failed to generate signed URLs for item ${item.id}:`,
               error,
@@ -145,7 +145,7 @@ export class ItemsService {
           item.images,
         );
         item.images = signedUrls;
-      } catch (error) {
+      } catch (error: any) {
         console.warn(
           `Failed to generate signed URLs for item ${item.id}:`,
           error,
@@ -195,7 +195,7 @@ export class ItemsService {
       const savedItem = await this.itemsRepository.save(item);
       console.log('✅ Item updated successfully:', savedItem);
       return savedItem;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Error updating item:', error);
       throw error;
     }
@@ -227,7 +227,7 @@ export class ItemsService {
           ),
         );
         console.log('✅ Images cleaned up successfully');
-      } catch (error) {
+      } catch (error: any) {
         console.error('⚠️ Error cleaning up images:', error);
         // Continue with item deletion even if image cleanup fails
       }

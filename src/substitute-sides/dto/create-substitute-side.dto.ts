@@ -9,11 +9,13 @@ import {
 export class CreateSubstituteSideDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  
+  name!: string;
 
   @IsNumber()
   @IsNotEmpty()
-  price: number;
+  
+  price!: number;
 
   @IsString()
   @IsOptional()

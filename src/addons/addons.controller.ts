@@ -40,7 +40,7 @@ export class AddonsController {
       );
       console.log('✅ Addons Controller - Create successful');
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Addons Controller - Create error:', error);
       throw error;
     }
@@ -89,7 +89,7 @@ export class AddonsController {
       await this.addonsService.remove(id);
       console.log('✅ Addons Controller - Delete successful');
       return { message: 'Addon deleted successfully' };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Addons Controller - Delete error:', error);
       throw error;
     }

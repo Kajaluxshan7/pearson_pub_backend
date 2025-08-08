@@ -3,7 +3,7 @@ import { AdminRole } from '../entities/admin.entity';
 
 export class CreateAdminDto {
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsOptional()
   @IsString()

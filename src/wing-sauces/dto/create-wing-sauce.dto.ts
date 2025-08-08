@@ -3,7 +3,8 @@ import { IsNotEmpty, IsString, IsOptional, IsUUID } from 'class-validator';
 export class CreateWingSauceDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  
+  name!: string;
 
   @IsString()
   @IsOptional()

@@ -48,7 +48,7 @@ export class ItemsController {
       const result = await this.itemsService.create(createItemDto, req.user.id);
       console.log('✅ Items Controller - Create successful');
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Items Controller - Create error:', error);
       throw error;
     }
@@ -119,7 +119,7 @@ export class ItemsController {
       );
       console.log('✅ Items Controller - Update successful');
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Items Controller - Update error:', error);
       throw error;
     }
@@ -179,7 +179,7 @@ export class ItemsController {
         signedUrls,
         message: `Successfully uploaded ${files.length} image(s)`,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Items Controller - Upload error:', error);
       throw error;
     }
@@ -217,7 +217,7 @@ export class ItemsController {
         signedUrl: uploadResult.signedUrl || uploadResult.url,
         message: 'Image uploaded successfully',
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Items Controller - Upload error:', error);
       throw error;
     }
@@ -231,7 +231,7 @@ export class ItemsController {
       const decodedUrl = decodeURIComponent(imageUrl);
       await this.fileUploadService.deleteFile(decodedUrl);
       return { success: true };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Items Controller - Delete image error:', error);
       throw error;
     }
@@ -245,7 +245,7 @@ export class ItemsController {
         body.imageUrls,
       );
       return { signedUrls };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Items Controller - Get signed URLs error:', error);
       throw error;
     }

@@ -58,7 +58,7 @@ export class OperationHoursController {
       );
       console.log('✅ OperationHours Controller - Create successful');
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ OperationHours Controller - Create error:', error);
       throw error;
     }
@@ -101,7 +101,7 @@ export class OperationHoursController {
       );
       console.log('✅ OperationHours Controller - Update successful');
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ OperationHours Controller - Update error:', error);
       throw error;
     }
@@ -115,7 +115,7 @@ export class OperationHoursController {
       await this.operationHoursService.remove(id);
       console.log('✅ OperationHours Controller - Delete successful');
       return { message: 'Operation hour deleted successfully' };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ OperationHours Controller - Delete error:', error);
       throw error;
     }

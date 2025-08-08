@@ -9,7 +9,8 @@ import {
 export class CreateEventDto {
   @IsString()
   @IsNotEmpty()
-  name: string;
+  
+  name!: string;
 
   @IsString()
   @IsOptional()
@@ -22,9 +23,11 @@ export class CreateEventDto {
 
   @IsDateString()
   @IsNotEmpty()
-  start_date: string;
+  
+  start_date!: string;
 
   @IsDateString()
   @IsNotEmpty()
-  end_date: string;
+  
+  end_date!: string;
 }

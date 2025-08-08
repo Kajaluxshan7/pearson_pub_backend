@@ -333,7 +333,7 @@ export class AdminsService {
       await this.adminsRepository.save(admin);
 
       return { avatar_url: uploadResult.url };
-    } catch (error) {
+    } catch (error: any) {
       throw new Error(`Failed to upload avatar: ${error.message}`);
     }
   }

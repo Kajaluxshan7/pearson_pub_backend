@@ -57,9 +57,9 @@ export class HealthController {
         round_trip_success: testInput === backToToronto,
         timezone_at_test_date: TimeService.getTimezoneInfo(utcFromToronto),
       };
-    } catch (error) {
+    } catch (error: any) {
       return {
-        error: error.message,
+        error: (error as any).message,
         input: testInput,
       };
     }

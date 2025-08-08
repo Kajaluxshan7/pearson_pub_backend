@@ -3,7 +3,7 @@ import { AdminRole } from '../../admins/entities/admin.entity';
 
 export class InviteAdminDto {
   @IsEmail()
-  email: string;
+  email!: string;
 
   @IsOptional()
   @IsEnum(AdminRole)

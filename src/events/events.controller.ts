@@ -48,7 +48,7 @@ export class EventsController {
       );
       console.log('✅ Events Controller - Create successful');
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Events Controller - Create error:', error);
       throw error;
     }
@@ -99,7 +99,7 @@ export class EventsController {
       );
       console.log('✅ Events Controller - Update successful');
       return result;
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Events Controller - Update error:', error);
       throw error;
     }
@@ -112,7 +112,7 @@ export class EventsController {
       await this.eventsService.remove(id);
       console.log('✅ Events Controller - Delete successful');
       return { message: 'Event deleted successfully' };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Events Controller - Delete error:', error);
       throw error;
     }
@@ -166,7 +166,7 @@ export class EventsController {
         signedUrls,
         message: `Successfully uploaded ${files.length} image(s)`,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Events Controller - Upload error:', error);
       throw error;
     }
@@ -204,7 +204,7 @@ export class EventsController {
         signedUrl: uploadResult.signedUrl || uploadResult.url,
         message: 'Image uploaded successfully',
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Events Controller - Upload error:', error);
       throw error;
     }
@@ -218,7 +218,7 @@ export class EventsController {
       await this.fileUploadService.deleteFile(decodeURIComponent(imageUrl));
       console.log('✅ Events Controller - Delete image successful');
       return { message: 'Image deleted successfully' };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Events Controller - Delete image error:', error);
       throw error;
     }
