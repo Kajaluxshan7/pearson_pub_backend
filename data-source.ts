@@ -31,8 +31,8 @@ if (databaseUrl) {
 
 // IMPORTANT: __dirname is `dist/` at runtime.
 // Do NOT put `/src/` in these globs.
-const ENTITIES_GLOB = path.join(__dirname, '**', '*.entity.{js,ts}');
-const MIGRATIONS_GLOB = path.join(__dirname, 'migrations', '*.{js,ts}');
+const ENTITIES_GLOB = __dirname + '/**/*.entity.{js,ts}';
+const MIGRATIONS_GLOB = __dirname + '/migrations/*.{js,ts}';
 
 const AppDataSource = new DataSource({
   type: 'postgres',

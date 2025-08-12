@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { PublicApiService } from './public-api.service';
 
 @Controller('api/public')
@@ -50,8 +50,28 @@ export class PublicApiController {
     return this.publicApiService.getStoriesData();
   }
 
+  @Get('stories/:id')
+  async getStoryById(@Param('id') id: string) {
+    console.error('🔍 CONTROLLER METHOD CALLED - Story ID:', id);
+    console.error('🔍 Request received at:', new Date().toISOString());
+    try {
+      const result = await this.publicApiService.getStoryById(id);
+      console.error('🔍 Service call successful');
+      return result;
+    } catch (error) {
+      console.error('🔍 Service call failed:', error);
+      throw error;
+    }
+  }
+
   @Get('operation-hours')
   async getOperationHours() {
+    console.error('🔥 OPERATION HOURS DEBUG TEST - This should appear in logs');
     return this.publicApiService.getOperationHours();
+  }
+
+  @Get('operation-hours/status')
+  async getTodayOperationStatus() {
+    return this.publicApiService.getTodayOperationStatus();
   }
 }

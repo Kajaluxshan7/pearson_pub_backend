@@ -3,6 +3,11 @@ import { TimeService } from '../common/time';
 
 @Controller('health')
 export class HealthController {
+  @Get()
+  basicHealthCheck() {
+    return { status: 'ok' };
+  }
+
   @Get('time')
   getTimeInfo() {
     const now = TimeService.nowUTC();

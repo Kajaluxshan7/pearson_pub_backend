@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
+import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 
 // Global error handler
@@ -17,7 +18,13 @@ async function bootstrap() {
   const port = 5000;
   console.log('🚀 Starting application on port:', port);
 
-  const app = await NestFactory.create(AppModule); // Enable CORS
+  const app = await NestFactory.create(AppModule);
+
+  // Configure custom body parser with increased size limits
+  app.use(json({ limit: '50mb' }));
+  app.use(urlencoded({ limit: '50mb', extended: true }));
+
+  // Enable CORS
   app.enableCors({
     origin: [
       'http://localhost:3000',
@@ -57,7 +64,7 @@ async function bootstrap() {
     next(err);
   });
 
-  await app.listen(port, '0.0.0.0');
-  console.log(`✅ Application is running on: http://0.0.0.0:${port}`);
+  await app.listen(port, 'localhost');
+  console.log(`✅ Application is running on: http://localhost:${port}`);
 }
-bootstrap();
+void bootstrap();

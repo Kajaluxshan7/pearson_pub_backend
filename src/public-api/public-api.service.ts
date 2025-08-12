@@ -44,11 +44,23 @@ export class PublicApiService {
 
   // Helper method to generate signed URLs for images
   private async getSignedImagesUrls(images: string[]): Promise<string[]> {
-    if (!images || images.length === 0) return [];
+    console.log('getSignedImagesUrls called with:', images);
+    console.log('Type of images parameter:', typeof images);
+    console.log('Is images an array?:', Array.isArray(images));
+    
+    if (!images || images.length === 0) {
+      console.log('No images provided or empty array, returning empty array');
+      return [];
+    }
 
     try {
-      return await this.fileUploadService.getMultipleSignedUrls(images);
+      console.log('Calling fileUploadService.getMultipleSignedUrls with:', images);
+      const result = await this.fileUploadService.getMultipleSignedUrls(images);
+      console.log('getMultipleSignedUrls returned:', result);
+      return result;
     } catch (error: any) {
+      console.error('Error in getSignedImagesUrls:', error);
+      console.error('Error stack:', error.stack);
       console.warn(
         'Failed to generate signed URLs, returning original URLs:',
         error,
@@ -310,6 +322,8 @@ export class PublicApiService {
         1,
         10,
       );
+      const currentStatus =
+        await this.operationHoursService.getCurrentOperationStatus();
 
       return {
         name: 'The Pearson Pub',
@@ -317,6 +331,7 @@ export class PublicApiService {
         email: 'thepearsonpub@rogers.com',
         address: '101 MARY ST WHITBY, ON, L1N 2R4',
         operationHours: operationHoursResponse.data,
+        currentStatus: currentStatus, // Added current opening status
         socialMedia: {
           facebook: 'https://www.facebook.com/thepearsonpubwhitby/',
           instagram: 'https://instagram.com/thepearsonpub',
@@ -540,6 +555,46 @@ export class PublicApiService {
     }
   }
 
+  async getStoryById(id: string): Promise<any> {
+    try {
+      console.log('Getting story by ID:', id);
+      
+      // Get the story by ID
+      const story = await this.storiesService.findOne(id);
+      console.log('Found story:', story);
+
+      if (!story) {
+        throw new Error('Story not found');
+      }
+
+      console.log('Story images before processing:', story.images);
+      console.log('Type of story.images:', typeof story.images);
+      console.log('Story.images array check:', Array.isArray(story.images));
+
+      // Generate signed URLs for story images
+      const signedImages = await this.getSignedImagesUrls(story.images || []);
+      console.log('Signed images generated:', signedImages);
+
+      return {
+        id: story.id,
+        title: story.story_name,
+        description: story.description,
+        fullDescription: story.description, // Use description as fullDescription for now
+        content: story.description, // Use description as content for now
+        images: signedImages,
+        image: signedImages && signedImages.length > 0 ? signedImages[0] : null,
+        created_at: story.created_at,
+        updated_at: story.updated_at,
+      };
+    } catch (error: any) {
+      console.error('Error fetching story:', error);
+      console.error('Error stack:', error.stack);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to fetch story: ${errorMessage}`);
+    }
+  }
+
   async getOperationHours() {
     try {
       const operationHoursResponse = await this.operationHoursService.findAll(
@@ -566,6 +621,16 @@ export class PublicApiService {
     } catch (error: any) {
       console.error('Error fetching operation hours:', error);
       throw new Error('Failed to fetch operation hours');
+    }
+  }
+
+  async getTodayOperationStatus() {
+    try {
+      // Use the timezone-aware operation status service
+      return await this.operationHoursService.getCurrentOperationStatus();
+    } catch (error) {
+      console.error("Error fetching today's operation status:", error);
+      throw new Error("Failed to fetch today's operation status");
     }
   }
 }

@@ -193,105 +193,41 @@ export class OperationHoursService {
       })
       .toLowerCase() as DayOfWeek;
 
-    // First try to find hours for the current day
-    let todayHours = await this.operationHoursRepository.findOne({
+    console.log('🕐 Current day name:', currentDayName);
+
+    // Fetch today's operation hours directly from the database
+    const todayHours = await this.operationHoursRepository.findOne({
       where: { day: currentDayName },
     });
 
-    // If not found for current day, check if we're in an overnight period from the previous day
+    console.log('🕐 Found today hours:', todayHours);
+
     if (!todayHours) {
-      const dayNames = [
-        'sunday',
-        'monday',
-        'tuesday',
-        'wednesday',
-        'thursday',
-        'friday',
-        'saturday',
-      ];
-      const currentDayIndex = dayNames.indexOf(currentDayName);
-      const previousDayIndex = currentDayIndex === 0 ? 6 : currentDayIndex - 1;
-      const previousDay = dayNames[previousDayIndex] as DayOfWeek;
-
-      const previousDayHours = await this.operationHoursRepository.findOne({
-        where: { day: previousDay },
-      });
-
-      // Check if previous day has overnight hours that extend to current day
-      if (previousDayHours) {
-        const previousOpenTime =
-          this.timezoneService.convertUtcTimeToTorontoTime(
-            previousDayHours.open_time,
-          );
-        const previousCloseTime =
-          this.timezoneService.convertUtcTimeToTorontoTime(
-            previousDayHours.close_time,
-          );
-
-        const openMinutes = this.timeToMinutes(previousOpenTime);
-        const closeMinutes = this.timeToMinutes(previousCloseTime);
-
-        // If closing time is before opening time, it's overnight hours
-        if (closeMinutes < openMinutes) {
-          const currentTime = now.toTimeString().slice(0, 5); // HH:MM format
-          const currentMinutes = this.timeToMinutes(currentTime);
-
-          // If we're currently in the early hours before closing time
-          if (currentMinutes <= closeMinutes) {
-            todayHours = previousDayHours;
-          }
-        }
-      }
-    }
-
-    if (!todayHours || !todayHours.status) {
+      console.log('🕐 No operation hours found for today');
       return {
         isOpen: false,
-        todayHours: todayHours
-          ? {
-              ...todayHours,
-              open_time: this.timezoneService.convertUtcTimeToTorontoTime(
-                todayHours.open_time,
-              ),
-              close_time: this.timezoneService.convertUtcTimeToTorontoTime(
-                todayHours.close_time,
-              ),
-            }
-          : null,
+        todayHours: null,
         status: 'Closed',
         nextChange: null,
       };
     }
 
-    // Convert UTC times to Toronto timezone for business hours check
-    const torontoOpenTime = this.timezoneService.convertUtcTimeToTorontoTime(
-      todayHours.open_time,
-    );
-    const torontoCloseTime = this.timezoneService.convertUtcTimeToTorontoTime(
-      todayHours.close_time,
-    );
-
-    const isOpen = this.timezoneService.isWithinBusinessHours(
-      torontoOpenTime,
-      torontoCloseTime,
-      todayHours.day,
-    );
-
-    const status = this.timezoneService.getOperationStatus(
-      torontoOpenTime,
-      torontoCloseTime,
-      todayHours.status,
-      todayHours.day,
-    );
+    // Use the status column directly from the database
+    const isOpen = todayHours.status;
+    console.log('🕐 Status from database:', isOpen);
 
     return {
       isOpen,
       todayHours: {
         ...todayHours,
-        open_time: torontoOpenTime,
-        close_time: torontoCloseTime,
+        open_time: this.timezoneService.convertUtcTimeToTorontoTime(
+          todayHours.open_time,
+        ),
+        close_time: this.timezoneService.convertUtcTimeToTorontoTime(
+          todayHours.close_time,
+        ),
       },
-      status,
+      status: isOpen ? 'Open' : 'Closed',
       nextChange: null, // Could be enhanced to show next opening/closing time
     };
   }
