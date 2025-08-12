@@ -1,8 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
-import { json, urlencoded } from 'express';
+import { json, urlencoded, Request, Response, NextFunction } from 'express';
 import { AppModule } from './app.module';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 // Global error handler
 process.on('uncaughtException', (error) => {
@@ -21,8 +22,8 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Configure custom body parser with increased size limits
-  app.use(json({ limit: '50mb' }));
-  app.use(urlencoded({ limit: '50mb', extended: true }));
+  app.use(json({ limit: '2mb' }));
+  app.use(urlencoded({ limit: '2mb', extended: true }));
 
   // Enable CORS
   app.enableCors({
@@ -52,19 +53,22 @@ async function bootstrap() {
     }),
   );
 
+  // Add global exception filter
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
   // Add global error logging
-  app.use((err: any, req: any, res: any, next: any) => {
+  app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error('❌ HTTP ERROR:', {
       method: req.method,
       url: req.url,
       error: err.message,
       stack: err.stack,
-      body: req.body,
+      body: req.body as unknown,
     });
     next(err);
   });
 
-  await app.listen(port, 'localhost');
-  console.log(`✅ Application is running on: http://localhost:${port}`);
+  await app.listen(port, '0.0.0.0');
+  console.log(`✅ Application is running on: http://0.0.0.0:${port}`);
 }
 void bootstrap();

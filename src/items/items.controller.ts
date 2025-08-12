@@ -127,8 +127,16 @@ export class ItemsController {
 
   @Delete(':id')
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  remove(@Param('id') id: string) {
-    return this.itemsService.remove(id);
+  async remove(@Param('id') id: string) {
+    try {
+      console.log('🔄 Items Controller - Delete request for ID:', id);
+      await this.itemsService.remove(id);
+      console.log('✅ Items Controller - Delete successful');
+      return { message: 'Item deleted successfully' };
+    } catch (error: any) {
+      console.error('❌ Items Controller - Delete error:', error);
+      throw error;
+    }
   }
 
   @Post('upload-images')

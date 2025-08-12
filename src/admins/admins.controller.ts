@@ -106,8 +106,16 @@ export class AdminsController {
 
   @Delete(':id')
   @Roles(AdminRole.SUPERADMIN)
-  remove(@Param('id') id: string, @Request() req) {
-    return this.adminsService.remove(id, req.user.role);
+  async remove(@Param('id') id: string, @Request() req) {
+    try {
+      console.log('🔄 Admins Controller - Delete request for ID:', id);
+      await this.adminsService.remove(id, req.user.role);
+      console.log('✅ Admins Controller - Delete successful');
+      return { message: 'Admin deleted successfully' };
+    } catch (error: any) {
+      console.error('❌ Admins Controller - Delete error:', error);
+      throw error;
+    }
   }
 
   @Patch(':id/toggle-status')

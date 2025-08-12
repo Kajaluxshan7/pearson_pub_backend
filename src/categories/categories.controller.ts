@@ -64,7 +64,15 @@ export class CategoriesController {
 
   @Delete(':id')
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  remove(@Param('id') id: string) {
-    return this.categoriesService.remove(id);
+  async remove(@Param('id') id: string) {
+    try {
+      console.log('🔄 Categories Controller - Delete request for ID:', id);
+      await this.categoriesService.remove(id);
+      console.log('✅ Categories Controller - Delete successful');
+      return { message: 'Category deleted successfully' };
+    } catch (error: any) {
+      console.error('❌ Categories Controller - Delete error:', error);
+      throw error;
+    }
   }
 }
