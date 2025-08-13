@@ -112,7 +112,24 @@ export class AuthController {
 
   @Post('setup-password')
   async setupPassword(@Body() setupPasswordDto: SetupPasswordDto) {
-    return this.authService.setupPassword(setupPasswordDto);
+    try {
+      return await this.authService.setupPassword(setupPasswordDto);
+    } catch (error: unknown) {
+      // Log error details for debugging
+      if (typeof error === 'object' && error !== null) {
+        console.error('[setup-password] Error:', {
+          message: (error as { message?: string }).message,
+          name: (error as { name?: string }).name,
+          stack: (error as { stack?: string }).stack,
+          status: (error as { status?: number }).status,
+          response: (error as { response?: unknown }).response,
+        });
+      } else {
+        console.error('[setup-password] Error:', error);
+      }
+      // Return error message and status code to frontend
+      throw error;
+    }
   }
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(AdminRole.SUPERADMIN)

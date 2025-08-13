@@ -9,4 +9,15 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  @Get('health')
+  getHealth(): object {
+    return {
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      service: 'The Pearson Pub Backend',
+      version: '1.0.0',
+      environment: process.env.NODE_ENV || 'development',
+    };
+  }
 }
