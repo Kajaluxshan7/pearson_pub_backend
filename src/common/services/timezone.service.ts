@@ -15,13 +15,10 @@ export class TimezoneService {
     if (!dateString) {
       throw new Error('Date string is required');
     }
-
-    const date = parseISO(dateString);
-    if (!isValid(date)) {
-      throw new Error('Invalid date format');
-    }
-
-    return fromZonedTime(date, this.TIMEZONE);
+    // Parse the input and convert from Eastern Time to UTC
+    const parsed: Date = parseISO(dateString) as Date;
+    if (!isValid(parsed)) throw new Error('Invalid date format');
+    return fromZonedTime(parsed as Date, this.TIMEZONE) as Date;
   }
 
   /**
@@ -33,7 +30,7 @@ export class TimezoneService {
     if (!utcDate || !(utcDate instanceof Date)) {
       throw new Error('Valid UTC date is required');
     }
-
+    // Convert UTC Date to a Date object representing the equivalent time in the target timezone
     return toZonedTime(utcDate, this.TIMEZONE);
   }
 
@@ -48,8 +45,8 @@ export class TimezoneService {
       throw new Error('Valid UTC date is required');
     }
 
-    const easternDate = this.convertUtcToEastern(utcDate);
-    return format(easternDate, formatString, { timeZone: this.TIMEZONE });
+  const easternDate = this.convertUtcToEastern(utcDate);
+  return format(easternDate, formatString, { timeZone: this.TIMEZONE });
   }
 
   /**
@@ -78,13 +75,9 @@ export class TimezoneService {
     if (!dateTimeString) {
       throw new Error('DateTime string is required');
     }
-
-    const date = parseISO(dateTimeString);
-    if (!isValid(date)) {
-      throw new Error('Invalid datetime format');
-    }
-
-    return fromZonedTime(date, this.TIMEZONE);
+  const parsed: Date = parseISO(dateTimeString) as Date;
+  if (!isValid(parsed)) throw new Error('Invalid datetime format');
+  return fromZonedTime(parsed as Date, this.TIMEZONE) as Date;
   }
 
   /**
@@ -99,20 +92,35 @@ export class TimezoneService {
       throw new Error('DateTime string is required');
     }
 
-    // Check if string is already in UTC format (ends with Z or has timezone offset)
-    if (
-      dateTimeString.endsWith('Z') ||
-      dateTimeString.match(/[+-]\d{2}:\d{2}$/)
-    ) {
-      const date = parseISO(dateTimeString);
-      if (!isValid(date)) {
-        throw new Error('Invalid UTC datetime format');
-      }
-      return date; // Already UTC, return as-is
-    }
+    // Clean up the input string
+    const cleanedString = dateTimeString.trim();
 
-    // Otherwise, treat as Eastern Time and convert to UTC
-    return this.convertEasternDateTimeToUtc(dateTimeString);
+    try {
+      // If the string includes timezone info (Z or offset) parse directly as UTC
+      if (
+        cleanedString.endsWith('Z') ||
+        /[+-]\d{2}:\d{2}$/.test(cleanedString) ||
+        /[+-]\d{4}$/.test(cleanedString)
+      ) {
+        const date: Date = parseISO(cleanedString);
+        if (!isValid(date)) {
+          throw new Error(`Invalid UTC datetime format: ${cleanedString}`);
+        }
+        return date;
+      }
+
+      // Check if it's already a valid ISO string without timezone
+      const isoDate = parseISO(cleanedString);
+      if (isValid(isoDate)) {
+        // Treat as Eastern Time and convert to UTC
+        return this.convertEasternDateTimeToUtc(cleanedString);
+      }
+
+      throw new Error(`Unable to parse datetime: ${cleanedString}`);
+    } catch (error) {
+      console.error('Error parsing event datetime:', error);
+      throw new Error(`Invalid datetime format: ${cleanedString}`);
+    }
   }
 
   /**
@@ -129,8 +137,8 @@ export class TimezoneService {
       throw new Error('Valid UTC date is required');
     }
 
-    const easternDate = this.convertUtcToEastern(utcDate);
-    return format(easternDate, formatString, { timeZone: this.TIMEZONE });
+  const easternDate = this.convertUtcToEastern(utcDate);
+  return format(easternDate, formatString, { timeZone: this.TIMEZONE });
   }
 
   /**
@@ -143,8 +151,8 @@ export class TimezoneService {
       throw new Error('Valid UTC date is required');
     }
 
-    const easternDate = this.convertUtcToEastern(utcDate);
-    return format(easternDate, 'MMM d, h a', { timeZone: this.TIMEZONE });
+  const easternDate = this.convertUtcToEastern(utcDate);
+  return format(easternDate, 'MMM d, h a', { timeZone: this.TIMEZONE });
   }
 
   /**
@@ -153,8 +161,8 @@ export class TimezoneService {
    * @returns true if DST is active
    */
   isDaylightSavingTime(date: Date = new Date()): boolean {
-    const easternDate = this.convertUtcToEastern(date);
-    const offset = format(easternDate, 'xxx', { timeZone: this.TIMEZONE });
+  const easternDate = this.convertUtcToEastern(date);
+  const offset = format(easternDate, 'xxx', { timeZone: this.TIMEZONE });
     return offset === '-04:00'; // EDT (UTC-4), vs EST (UTC-5)
   }
 
@@ -169,7 +177,7 @@ export class TimezoneService {
     offset: string;
     isDST: boolean;
   } {
-    const easternDate = this.convertUtcToEastern(date);
+  const easternDate = this.convertUtcToEastern(date);
     const isDST = this.isDaylightSavingTime(date);
 
     return {
@@ -379,37 +387,19 @@ export class TimezoneService {
         `Invalid time format. Expected HH:MM or HH:MM:SS, got: ${timeString}`,
       );
     }
-
-    try {
-      // Since UTC→Toronto conversion works correctly, but Toronto→UTC is broken due to system timezone interference,
-      // we'll use a reverse lookup approach: find the UTC time that converts to the target Toronto time
-
-      const targetTorontoTime = timeString.substring(0, 5); // Ensure HH:MM format
-
-      // Search through possible UTC times to find the one that gives us the target Toronto time
-      // This is more reliable than the direct conversion which is affected by system timezone
-      for (let utcHour = 0; utcHour < 24; utcHour++) {
-        for (let utcMinute = 0; utcMinute < 60; utcMinute += 1) {
-          // Check every minute for precision
-          const utcTime = `${String(utcHour).padStart(2, '0')}:${String(utcMinute).padStart(2, '0')}`;
-          const resultTorontoTime = this.convertUtcTimeToTorontoTime(utcTime);
-
-          if (resultTorontoTime === targetTorontoTime) {
-            return utcTime;
-          }
-        }
-      }
-
-      // Fallback: if no exact match found, return the input (this shouldn't happen with valid times)
-      console.warn(
-        `Could not find UTC equivalent for Toronto time: ${timeString}`,
-      );
-      return targetTorontoTime;
-    } catch (error: any) {
-      console.error('Error converting Toronto time to UTC time:', error);
-      // Return HH:MM format even on error
-      return timeString.substring(0, 5); // Fallback to first 5 characters (HH:MM)
+    // Build a Toronto-local datetime string for today and convert to UTC
+    const todayToronto = format(new Date(), 'yyyy-MM-dd', {
+      timeZone: this.TIMEZONE,
+    });
+    const torontoDateTime = `${todayToronto}T${timeString}`;
+    const parsed: Date = parseISO(torontoDateTime) as Date;
+    if (!isValid(parsed)) {
+      throw new Error(`Invalid datetime constructed: ${torontoDateTime}`);
     }
+    const utcDate: Date = fromZonedTime(parsed as Date, this.TIMEZONE) as Date;
+
+    // Return HH:MM in UTC
+    return format(utcDate as Date, 'HH:mm', { timeZone: 'UTC' });
   }
 
   /**
@@ -427,29 +417,23 @@ export class TimezoneService {
       );
     }
 
-    try {
-      // Normalize to HH:MM:SS format if needed
-      const normalizedTime =
-        timeString.includes(':') && timeString.split(':').length === 2
-          ? `${timeString}:00`
-          : timeString;
+    // Normalize to HH:MM:SS format if needed
+    const normalizedTime =
+      timeString.includes(':') && timeString.split(':').length === 2
+        ? `${timeString}:00`
+        : timeString;
 
-      // Use the same reference date as the conversion method above
-      const today = format(new Date(), 'yyyy-MM-dd');
+    // Use the same reference date as the conversion method above
+    const today = format(new Date(), 'yyyy-MM-dd');
 
-      // Create UTC datetime using explicit UTC string format
-      const utcDateTimeString = `${today}T${normalizedTime}Z`;
-      const utcDateTime = parseISO(utcDateTimeString);
+    // Create UTC datetime using explicit UTC string format
+    const utcDateTimeString = `${today}T${normalizedTime}Z`;
+    const utcDateTime: Date = parseISO(utcDateTimeString);
 
-      // Convert from UTC to Toronto timezone
-      const torontoDateTime = toZonedTime(utcDateTime, this.TIMEZONE);
+    // Convert from UTC to Toronto timezone
+    const torontoDateTime: Date = toZonedTime(utcDateTime, this.TIMEZONE);
 
-      return format(torontoDateTime, 'HH:mm');
-    } catch (error: any) {
-      console.error('Error converting UTC time to Toronto time:', error);
-      // Return HH:MM format even on error
-      return timeString.substring(0, 5); // Fallback to first 5 characters (HH:MM)
-    }
+    return format(torontoDateTime, 'HH:mm');
   }
 
   /**
@@ -483,13 +467,9 @@ export class TimezoneService {
       throw new Error('DateTime string is required');
     }
 
-    try {
-      // Parse as if it's in Toronto timezone and convert to UTC
-      const torontoDate = parseISO(dateTimeString);
-      return fromZonedTime(torontoDate, this.TIMEZONE);
-    } catch (error: any) {
-      console.error('Error parsing datetime input:', error);
-      throw new Error('Invalid datetime format');
-    }
+    // Interpret the input as a Toronto-local datetime and convert to UTC
+    const parsed: Date = parseISO(dateTimeString);
+    if (!isValid(parsed)) throw new Error('Invalid datetime format');
+    return fromZonedTime(parsed, this.TIMEZONE);
   }
 }
