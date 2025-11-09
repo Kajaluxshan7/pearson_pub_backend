@@ -93,7 +93,8 @@ export class ItemsService {
     }
 
     queryBuilder
-      .orderBy('item.created_at', 'DESC')
+      .orderBy('item.display_order', 'ASC')
+      .addOrderBy('item.created_at', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
@@ -238,5 +239,14 @@ export class ItemsService {
 
   async getCount(): Promise<number> {
     return this.itemsRepository.count();
+  }
+
+  async reorderItems(itemIds: string[]): Promise<void> {
+    // Update display_order for each item based on their position in the array
+    const updatePromises = itemIds.map((id, index) => {
+      return this.itemsRepository.update(id, { display_order: index + 1 });
+    });
+
+    await Promise.all(updatePromises);
   }
 }

@@ -72,6 +72,9 @@ export class Item {
   @Column({ default: false })
   is_favourite!: boolean;
 
+  @Column({ type: 'integer', default: 0 })
+  display_order!: number;
+
   @ManyToOne(() => Admin, { nullable: true })
   @JoinColumn({ name: 'last_edited_by_admin_id' })
   lastEditedByAdmin!: Admin;

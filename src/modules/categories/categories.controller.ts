@@ -9,10 +9,12 @@ import {
   Query,
   UseGuards,
   Request,
+  Put,
 } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { ReorderCategoriesDto } from './dto/reorder-categories.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
@@ -74,5 +76,12 @@ export class CategoriesController {
       console.error('❌ Categories Controller - Delete error:', error);
       throw error;
     }
+  }
+
+  @Post('reorder')
+  @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
+  async reorder(@Body() reorderDto: ReorderCategoriesDto) {
+    await this.categoriesService.reorderCategories(reorderDto.categoryIds);
+    return { message: 'Categories reordered successfully' };
   }
 }

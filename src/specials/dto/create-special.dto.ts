@@ -53,6 +53,16 @@ export class CreateSpecialDto {
   @IsNotEmpty()
   seasonal_end_datetime?: Date;
 
+  // Display start time - optional, controls when special is visible to users
+  @IsDateString()
+  @IsOptional()
+  display_start_time?: Date;
+
+  // Display end time - optional, controls when special stops being visible to users
+  @IsDateString()
+  @IsOptional()
+  display_end_time?: Date;
+
   @IsUUID()
   @IsOptional()
   lastEditedByAdminId?: string;

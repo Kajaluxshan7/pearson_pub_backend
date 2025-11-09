@@ -17,6 +17,7 @@ import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
 import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
+import { ReorderItemsDto } from './dto/reorder-items.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -257,5 +258,12 @@ export class ItemsController {
       console.error('❌ Items Controller - Get signed URLs error:', error);
       throw error;
     }
+  }
+
+  @Post('reorder')
+  @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
+  async reorder(@Body() reorderDto: ReorderItemsDto) {
+    await this.itemsService.reorderItems(reorderDto.itemIds);
+    return { message: 'Items reordered successfully' };
   }
 }

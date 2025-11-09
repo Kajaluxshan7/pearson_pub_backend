@@ -20,7 +20,6 @@ import { Admin } from '../../admins/entities/admin.entity';
   `)
 export class Special {
   @PrimaryGeneratedColumn('uuid')
-  
   id!: string;
 
   @Column({
@@ -28,49 +27,44 @@ export class Special {
     enum: SpecialTypeEnum,
     nullable: false,
   })
-  
   special_type!: SpecialTypeEnum;
 
   @ManyToOne(() => SpecialsDay, { nullable: true })
   @JoinColumn({ name: 'specials_day_id' })
-  
   specialsDay!: SpecialsDay;
 
   @Column({ name: 'specials_day_id', type: 'uuid', nullable: true })
-  
   specialsDayId!: string;
 
   @Column({ type: 'text', nullable: true })
-  
   season_name!: string;
 
   @Column({ type: 'text', nullable: true })
-  
   description!: string;
 
   @Column({ type: 'text', nullable: true })
-  
   image_url!: string;
 
   @Column({ type: 'json', nullable: true })
-  
   image_urls!: string[];
 
   @Column({ type: 'timestamptz', nullable: true })
-  
   seasonal_start_datetime!: Date;
 
   @Column({ type: 'timestamptz', nullable: true })
-  
   seasonal_end_datetime!: Date;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  display_start_time!: Date;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  display_end_time!: Date;
 
   @ManyToOne(() => Admin, { nullable: false })
   @JoinColumn({ name: 'last_edited_by_admin_id' })
-  
   lastEditedByAdmin!: Admin;
 
   @Column({ name: 'last_edited_by_admin_id', type: 'uuid', nullable: false })
-  
   lastEditedByAdminId!: string;
 
   @CreateDateColumn({ type: 'timestamptz', default: () => 'CURRENT_TIMESTAMP' })
@@ -84,6 +78,5 @@ export class Special {
   updated_at!: Date;
 
   @Column({ type: 'varchar', length: 50, default: 'America/Toronto' })
-  
   timezone!: string;
 }

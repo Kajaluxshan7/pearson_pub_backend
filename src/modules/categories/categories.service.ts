@@ -59,7 +59,8 @@ export class CategoriesService {
     }
 
     queryBuilder
-      .orderBy('category.created_at', 'DESC')
+      .orderBy('category.display_order', 'ASC')
+      .addOrderBy('category.created_at', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
@@ -115,5 +116,14 @@ export class CategoriesService {
     }
 
     await this.categoriesRepository.remove(category);
+  }
+
+  async reorderCategories(categoryIds: string[]): Promise<void> {
+    // Update display_order for each category based on their position in the array
+    const updatePromises = categoryIds.map((id, index) => {
+      return this.categoriesRepository.update(id, { display_order: index + 1 });
+    });
+
+    await Promise.all(updatePromises);
   }
 }

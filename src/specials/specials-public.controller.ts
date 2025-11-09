@@ -12,6 +12,12 @@ export class SpecialsPublicController {
     @Query('search') search?: string,
     @Query('specialType') specialType?: string,
   ) {
-    return this.specialsService.findAll(page, limit, search, specialType);
+    // Use findAllVisible to filter by display times
+    return this.specialsService.findAllVisible(
+      page,
+      limit,
+      search,
+      specialType,
+    );
   }
 }

@@ -31,6 +31,8 @@ export class SpecialsService {
     // Convert Toronto timezone to UTC for seasonal specials
     let startDateUtc: Date | undefined;
     let endDateUtc: Date | undefined;
+    let displayStartTimeUtc: Date | undefined;
+    let displayEndTimeUtc: Date | undefined;
 
     if (createSpecialDto.special_type === 'seasonal') {
       if (createSpecialDto.seasonal_start_datetime) {
@@ -43,6 +45,18 @@ export class SpecialsService {
           createSpecialDto.seasonal_end_datetime.toString(),
         );
       }
+    }
+
+    // Convert display times to UTC
+    if (createSpecialDto.display_start_time) {
+      displayStartTimeUtc = this.timezoneService.parseEventDateTime(
+        createSpecialDto.display_start_time.toString(),
+      );
+    }
+    if (createSpecialDto.display_end_time) {
+      displayEndTimeUtc = this.timezoneService.parseEventDateTime(
+        createSpecialDto.display_end_time.toString(),
+      );
     }
 
     const imageUrls: string[] = [];
@@ -69,6 +83,8 @@ export class SpecialsService {
       ...createSpecialDto,
       seasonal_start_datetime: startDateUtc,
       seasonal_end_datetime: endDateUtc,
+      display_start_time: displayStartTimeUtc,
+      display_end_time: displayEndTimeUtc,
       image_url: primaryImageUrl,
       image_urls: imageUrls.length > 0 ? imageUrls : undefined,
       lastEditedByAdminId: adminId,
@@ -137,6 +153,51 @@ export class SpecialsService {
     return { data, total };
   }
 
+  async findAllVisible(
+    page = 1,
+    limit = 10,
+    search?: string,
+    specialType?: string,
+  ): Promise<{ data: Special[]; total: number }> {
+    const now = new Date();
+    const query = this.specialsRepository
+      .createQueryBuilder('special')
+      .leftJoinAndSelect('special.specialsDay', 'specialsDay')
+      .leftJoinAndSelect('special.lastEditedByAdmin', 'admin');
+
+    if (search) {
+      query.where(
+        'LOWER(special.season_name) LIKE LOWER(:search) OR LOWER(special.description) LIKE LOWER(:search)',
+        {
+          search: `%${search}%`,
+        },
+      );
+    }
+
+    if (specialType) {
+      query.andWhere('special.special_type = :specialType', { specialType });
+    }
+
+    // Filter by display times - only show specials within their display window
+    query.andWhere(
+      '(special.display_start_time IS NULL OR special.display_start_time <= :now)',
+      { now },
+    );
+    query.andWhere(
+      '(special.display_end_time IS NULL OR special.display_end_time >= :now)',
+      { now },
+    );
+
+    query.orderBy('special.created_at', 'DESC');
+
+    const [data, total] = await query
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    return { data, total };
+  }
+
   async findOne(id: string): Promise<Special> {
     const special = await this.specialsRepository.findOne({
       where: { id },
@@ -173,6 +234,21 @@ export class SpecialsService {
       (updateSpecialDto as any).seasonal_end_datetime =
         this.timezoneService.parseEventDateTime(
           updateSpecialDto.seasonal_end_datetime.toString(),
+        );
+    }
+
+    // Convert display times to UTC
+    if (updateSpecialDto.display_start_time) {
+      (updateSpecialDto as any).display_start_time =
+        this.timezoneService.parseEventDateTime(
+          updateSpecialDto.display_start_time.toString(),
+        );
+    }
+
+    if (updateSpecialDto.display_end_time) {
+      (updateSpecialDto as any).display_end_time =
+        this.timezoneService.parseEventDateTime(
+          updateSpecialDto.display_end_time.toString(),
         );
     }
 
