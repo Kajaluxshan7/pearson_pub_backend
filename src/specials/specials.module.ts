@@ -8,6 +8,7 @@ import { SpecialsDayController } from './specials-day.controller';
 import { Special } from './entities/special.entity';
 import { SpecialsDay } from './entities/specials-day.entity';
 import { FileUploadService } from '../common/services/file-upload.service';
+import { TimezoneService } from '../common/services/timezone.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Special, SpecialsDay])],
@@ -16,7 +17,12 @@ import { FileUploadService } from '../common/services/file-upload.service';
     SpecialsPublicController,
     SpecialsDayController,
   ],
-  providers: [SpecialsService, SpecialsDayService, FileUploadService],
+  providers: [
+    SpecialsService,
+    SpecialsDayService,
+    FileUploadService,
+    TimezoneService,
+  ],
   exports: [SpecialsService, SpecialsDayService],
 })
 export class SpecialsModule {}

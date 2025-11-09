@@ -18,18 +18,9 @@ export class OperationHoursService {
     createOperationHourDto: CreateOperationHourDto,
     adminId: string,
   ): Promise<OperationHour> {
-    // Convert time from Toronto timezone to UTC for storage
-    const convertedOpenTime = this.timezoneService.convertTorontoTimeToUtcTime(
-      createOperationHourDto.open_time,
-    );
-    const convertedCloseTime = this.timezoneService.convertTorontoTimeToUtcTime(
-      createOperationHourDto.close_time,
-    );
-
+    // TIME columns store local Toronto time directly - no conversion needed
     const operationHour = this.operationHoursRepository.create({
       ...createOperationHourDto,
-      open_time: convertedOpenTime,
-      close_time: convertedCloseTime,
       lastEditedByAdminId: adminId,
     });
     return this.operationHoursRepository.save(operationHour);
@@ -66,19 +57,9 @@ export class OperationHoursService {
 
     const [data, total] = await queryBuilder.getManyAndCount();
 
-    // Convert UTC times back to Toronto timezone for display
-    const convertedData = data.map((hour) => ({
-      ...hour,
-      open_time: this.timezoneService.convertUtcTimeToTorontoTime(
-        hour.open_time,
-      ),
-      close_time: this.timezoneService.convertUtcTimeToTorontoTime(
-        hour.close_time,
-      ),
-    }));
-
+    // TIME columns return local Toronto time directly - no conversion needed
     // Sort the data manually
-    const sortedData = convertedData.sort((a, b) => {
+    const sortedData = data.sort((a, b) => {
       const orderA = orderMap[a.day] || 8;
       const orderB = orderMap[b.day] || 8;
       return orderA - orderB;
@@ -109,16 +90,8 @@ export class OperationHoursService {
       throw new NotFoundException(`Operation hour with ID ${id} not found`);
     }
 
-    // Convert UTC times back to Toronto timezone for display
-    return {
-      ...operationHour,
-      open_time: this.timezoneService.convertUtcTimeToTorontoTime(
-        operationHour.open_time,
-      ),
-      close_time: this.timezoneService.convertUtcTimeToTorontoTime(
-        operationHour.close_time,
-      ),
-    };
+    // TIME columns return local Toronto time directly - no conversion needed
+    return operationHour;
   }
 
   async update(
@@ -135,35 +108,11 @@ export class OperationHoursService {
       throw new NotFoundException(`Operation hour with ID ${id} not found`);
     }
 
-    // Convert times from Toronto timezone to UTC for storage
-    const updateData = { ...updateOperationHourDto };
-    if (updateData.open_time) {
-      updateData.open_time = this.timezoneService.convertTorontoTimeToUtcTime(
-        updateData.open_time,
-      );
-    }
-    if (updateData.close_time) {
-      updateData.close_time = this.timezoneService.convertTorontoTimeToUtcTime(
-        updateData.close_time,
-      );
-    }
-
-    Object.assign(operationHour, updateData);
+    // TIME columns store local Toronto time directly - no conversion needed
+    Object.assign(operationHour, updateOperationHourDto);
     operationHour.lastEditedByAdminId = adminId;
 
-    const savedOperationHour =
-      await this.operationHoursRepository.save(operationHour);
-
-    // Convert back to Toronto timezone for response
-    return {
-      ...savedOperationHour,
-      open_time: this.timezoneService.convertUtcTimeToTorontoTime(
-        savedOperationHour.open_time,
-      ),
-      close_time: this.timezoneService.convertUtcTimeToTorontoTime(
-        savedOperationHour.close_time,
-      ),
-    };
+    return await this.operationHoursRepository.save(operationHour);
   }
 
   async remove(id: string): Promise<void> {
@@ -218,15 +167,7 @@ export class OperationHoursService {
 
     return {
       isOpen,
-      todayHours: {
-        ...todayHours,
-        open_time: this.timezoneService.convertUtcTimeToTorontoTime(
-          todayHours.open_time,
-        ),
-        close_time: this.timezoneService.convertUtcTimeToTorontoTime(
-          todayHours.close_time,
-        ),
-      },
+      todayHours, // TIME columns return local Toronto time directly
       status: isOpen ? 'Open' : 'Closed',
       nextChange: null, // Could be enhanced to show next opening/closing time
     };
@@ -258,34 +199,26 @@ export class OperationHoursService {
     });
 
     return allHours.map((hour) => {
-      // Convert UTC times to Toronto timezone for business hours calculations
-      const torontoOpenTime = this.timezoneService.convertUtcTimeToTorontoTime(
-        hour.open_time,
-      );
-      const torontoCloseTime = this.timezoneService.convertUtcTimeToTorontoTime(
-        hour.close_time,
-      );
-
+      // TIME columns return local Toronto time directly - no conversion needed
       return {
         ...hour,
-        // Convert times for display first
-        open_time: torontoOpenTime,
-        close_time: torontoCloseTime,
         isCurrentlyOpen: this.timezoneService.isWithinBusinessHours(
-          torontoOpenTime,
-          torontoCloseTime,
+          hour.open_time,
+          hour.close_time,
           hour.day,
         ),
         statusText: this.timezoneService.getOperationStatus(
-          torontoOpenTime,
-          torontoCloseTime,
+          hour.open_time,
+          hour.close_time,
           hour.status,
           hour.day,
         ),
-        formattedOpenTime:
-          this.timezoneService.formatTimeForDisplay(torontoOpenTime),
-        formattedCloseTime:
-          this.timezoneService.formatTimeForDisplay(torontoCloseTime),
+        formattedOpenTime: this.timezoneService.formatTimeForDisplay(
+          hour.open_time,
+        ),
+        formattedCloseTime: this.timezoneService.formatTimeForDisplay(
+          hour.close_time,
+        ),
       };
     });
   }

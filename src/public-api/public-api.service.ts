@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CategoriesService } from '../categories/categories.service';
+import { CategoriesService } from '../modules/categories/categories.service';
 import { ItemsService } from '../items/items.service';
 import { EventsService } from '../events/events.service';
 import { OperationHoursService } from '../operation-hours/operation-hours.service';

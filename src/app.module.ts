@@ -5,7 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './auth/auth.module';
 import { AdminsModule } from './admins/admins.module';
-import { CategoriesModule } from './categories/categories.module';
+import { CategoriesModule } from './modules/categories/categories.module';
 import { ItemsModule } from './items/items.module';
 import { AddonsModule } from './addons/addons.module';
 import { EventsModule } from './events/events.module';
@@ -60,7 +60,7 @@ import { HealthController } from './common/health.controller';
           ...databaseConfig,
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
           migrations: [__dirname + '/migrations/*{.ts,.js}'],
-          synchronize: configService.get<string>('NODE_ENV') !== 'production',
+          synchronize: false, // Always use migrations instead of schema synchronization
           logging: ['query', 'error'],
           ssl: false, // Disable SSL for local PostgreSQL connections
         };

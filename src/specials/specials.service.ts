@@ -9,6 +9,7 @@ import { Special } from './entities/special.entity';
 import { CreateSpecialDto } from './dto/create-special.dto';
 import { UpdateSpecialDto } from './dto/update-special.dto';
 import { FileUploadService } from '../common/services/file-upload.service';
+import { TimezoneService } from '../common/services/timezone.service';
 
 @Injectable()
 export class SpecialsService {
@@ -16,6 +17,7 @@ export class SpecialsService {
     @InjectRepository(Special)
     private specialsRepository: Repository<Special>,
     private fileUploadService: FileUploadService,
+    private timezoneService: TimezoneService,
   ) {}
 
   async create(
@@ -25,6 +27,23 @@ export class SpecialsService {
   ): Promise<Special> {
     // Validate business rules
     this.validateSpecialRules(createSpecialDto);
+
+    // Convert Toronto timezone to UTC for seasonal specials
+    let startDateUtc: Date | undefined;
+    let endDateUtc: Date | undefined;
+
+    if (createSpecialDto.special_type === 'seasonal') {
+      if (createSpecialDto.seasonal_start_datetime) {
+        startDateUtc = this.timezoneService.parseEventDateTime(
+          createSpecialDto.seasonal_start_datetime.toString(),
+        );
+      }
+      if (createSpecialDto.seasonal_end_datetime) {
+        endDateUtc = this.timezoneService.parseEventDateTime(
+          createSpecialDto.seasonal_end_datetime.toString(),
+        );
+      }
+    }
 
     const imageUrls: string[] = [];
     let primaryImageUrl: string | undefined;
@@ -48,6 +67,8 @@ export class SpecialsService {
 
     const special = this.specialsRepository.create({
       ...createSpecialDto,
+      seasonal_start_datetime: startDateUtc,
+      seasonal_end_datetime: endDateUtc,
       image_url: primaryImageUrl,
       image_urls: imageUrls.length > 0 ? imageUrls : undefined,
       lastEditedByAdminId: adminId,
@@ -139,6 +160,21 @@ export class SpecialsService {
 
     // Validate business rules
     this.validateSpecialRules(updateSpecialDto);
+
+    // Convert Toronto timezone to UTC for seasonal specials if datetime fields are being updated
+    if (updateSpecialDto.seasonal_start_datetime) {
+      (updateSpecialDto as any).seasonal_start_datetime =
+        this.timezoneService.parseEventDateTime(
+          updateSpecialDto.seasonal_start_datetime.toString(),
+        );
+    }
+
+    if (updateSpecialDto.seasonal_end_datetime) {
+      (updateSpecialDto as any).seasonal_end_datetime =
+        this.timezoneService.parseEventDateTime(
+          updateSpecialDto.seasonal_end_datetime.toString(),
+        );
+    }
 
     const newImageUrls: string[] = [];
     let newPrimaryImageUrl: string | undefined;
