@@ -18,14 +18,18 @@ import { StoriesService } from './stories.service';
 import { CreateStoryDto } from './dto/create-story.dto';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuthenticatedRequest } from '../common/types/authenticated-request.interface';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AdminRole } from '../admins/entities/admin.entity';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Controller('stories')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
 export class StoriesController {
+  private readonly logger = new LoggerService(StoriesController.name);
+
   constructor(private readonly storiesService: StoriesService) {}
 
   @Post()
@@ -33,14 +37,14 @@ export class StoriesController {
   create(
     @Body() createStoryDto: CreateStoryDto,
     @UploadedFiles() images: Express.Multer.File[],
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     // Validate image files
     if (images && images.length > 5) {
       throw new BadRequestException('Maximum 5 images allowed per story');
     }
 
-    return this.storiesService.create(createStoryDto, req.user.sub, images);
+    return this.storiesService.create(createStoryDto, req.user.id, images);
   }
 
   @Get()
@@ -65,10 +69,10 @@ export class StoriesController {
     @Param('id') id: string,
     @Body() updateStoryDto: UpdateStoryDto,
     @UploadedFiles() images: Express.Multer.File[],
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
-    console.log('Raw body received:', req.body);
-    console.log('Uploaded files:', images?.length || 0);
+    this.logger.log(`Raw body received: ${JSON.stringify(req.body)}`);
+    this.logger.log(`Uploaded files: ${images?.length || 0}`);
 
     // Parse arrays from FormData if they exist
     let removeImagesArray: string[] = [];
@@ -80,13 +84,17 @@ export class StoriesController {
         ? req.body['removeImages[]']
         : [req.body['removeImages[]']];
       delete req.body['removeImages[]']; // Clean up FormData
-      console.log('Parsed removeImages (with brackets):', removeImagesArray);
+      this.logger.log(
+        `Parsed removeImages (with brackets): ${JSON.stringify(removeImagesArray)}`,
+      );
     } else if (req.body.removeImages) {
       removeImagesArray = Array.isArray(req.body.removeImages)
         ? req.body.removeImages
         : [req.body.removeImages];
       delete req.body.removeImages; // Clean up
-      console.log('Parsed removeImages (without brackets):', removeImagesArray);
+      this.logger.log(
+        `Parsed removeImages (without brackets): ${JSON.stringify(removeImagesArray)}`,
+      );
     }
 
     // Handle existingImages array from FormData (both with and without brackets)
@@ -95,18 +103,16 @@ export class StoriesController {
         ? req.body['existingImages[]']
         : [req.body['existingImages[]']];
       delete req.body['existingImages[]']; // Clean up FormData
-      console.log(
-        'Parsed existingImages (with brackets):',
-        existingImagesArray,
+      this.logger.log(
+        `Parsed existingImages (with brackets): ${JSON.stringify(existingImagesArray)}`,
       );
     } else if (req.body.existingImages) {
       existingImagesArray = Array.isArray(req.body.existingImages)
         ? req.body.existingImages
         : [req.body.existingImages];
       delete req.body.existingImages; // Clean up
-      console.log(
-        'Parsed existingImages (without brackets):',
-        existingImagesArray,
+      this.logger.log(
+        `Parsed existingImages (without brackets): ${JSON.stringify(existingImagesArray)}`,
       );
     }
 
@@ -119,9 +125,9 @@ export class StoriesController {
         existingImagesArray.length > 0 ? existingImagesArray : undefined,
     };
 
-    console.log('Enhanced DTO:', enhancedDto);
+    this.logger.log(`Enhanced DTO: ${JSON.stringify(enhancedDto)}`);
 
-    return this.storiesService.update(id, enhancedDto, req.user.sub, images);
+    return this.storiesService.update(id, enhancedDto, req.user.id, images);
   }
 
   @Delete(':id')

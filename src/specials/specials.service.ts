@@ -10,9 +10,12 @@ import { CreateSpecialDto } from './dto/create-special.dto';
 import { UpdateSpecialDto } from './dto/update-special.dto';
 import { FileUploadService } from '../common/services/file-upload.service';
 import { TimezoneService } from '../common/services/timezone.service';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Injectable()
 export class SpecialsService {
+  private readonly logger = new LoggerService(SpecialsService.name);
+
   constructor(
     @InjectRepository(Special)
     private specialsRepository: Repository<Special>,
@@ -282,15 +285,14 @@ export class SpecialsService {
     const hasExistingImagesToKeep =
       Array.isArray(existingImagesToKeep) && existingImagesToKeep.length > 0;
 
-    console.log('🔄 SpecialsService - Images to remove:', imagesToRemove);
-    console.log(
-      '🔄 SpecialsService - Existing images to keep:',
-      existingImagesToKeep,
+    this.logger.log(`🔄 Images to remove: ${JSON.stringify(imagesToRemove)}`);
+    this.logger.log(
+      `🔄 Existing images to keep: ${JSON.stringify(existingImagesToKeep)}`,
     );
 
     if (hasImagesToRemove) {
       shouldDeleteOldImages = true;
-      console.log('✅ SpecialsService - Individual images marked for removal');
+      this.logger.log('✅ Individual images marked for removal');
     }
 
     // Prepare update data
@@ -314,17 +316,15 @@ export class SpecialsService {
             ? existingImagesToKeep[0]
             : newImageUrls[0];
 
-        console.log(
-          '🔄 SpecialsService - Combined images (existing + new):',
-          limitedCombinedImages,
+        this.logger.log(
+          `🔄 Combined images (existing + new): ${JSON.stringify(limitedCombinedImages)}`,
         );
       } else {
         // No existing images to keep, use only new images
         updateData.image_url = newPrimaryImageUrl;
         updateData.image_urls = newImageUrls;
-        console.log(
-          '🔄 SpecialsService - Using only new images:',
-          newImageUrls,
+        this.logger.log(
+          `🔄 Using only new images: ${JSON.stringify(newImageUrls)}`,
         );
       }
     } else if (hasImagesToRemove || hasExistingImagesToKeep) {
@@ -335,9 +335,8 @@ export class SpecialsService {
           existingImagesToKeep.length > 0 ? existingImagesToKeep : null;
         updateData.image_url =
           existingImagesToKeep.length > 0 ? existingImagesToKeep[0] : null;
-        console.log(
-          '🔄 SpecialsService - Using only existing images to keep:',
-          existingImagesToKeep,
+        this.logger.log(
+          `🔄 Using only existing images to keep: ${JSON.stringify(existingImagesToKeep)}`,
         );
       } else {
         // Handle individual image removal (legacy logic for backward compatibility)
@@ -359,9 +358,8 @@ export class SpecialsService {
         updateData.image_url = newImageUrl;
         updateData.image_urls =
           remainingImageUrls.length > 0 ? remainingImageUrls : null;
-        console.log(
-          '🔄 SpecialsService - Legacy removal logic - remaining images:',
-          remainingImageUrls,
+        this.logger.log(
+          `🔄 Legacy removal logic - remaining images: ${JSON.stringify(remainingImageUrls)}`,
         );
       }
     }
@@ -370,14 +368,15 @@ export class SpecialsService {
     delete updateData.removeImages;
     delete updateData.existingImages;
 
-    console.log(
-      '🔄 SpecialsService - Update data before database save:',
-      updateData,
+    this.logger.log(
+      `🔄 Update data before database save: ${JSON.stringify(updateData)}`,
     );
 
     // Update the database
     const updateResult = await this.specialsRepository.update(id, updateData);
-    console.log('✅ SpecialsService - Database update result:', updateResult);
+    this.logger.log(
+      `✅ Database update result: ${JSON.stringify(updateResult)}`,
+    );
 
     // Delete old images from S3 if needed (after successful database update)
     if (hasImagesToRemove && imagesToRemove.length > 0) {
@@ -385,9 +384,12 @@ export class SpecialsService {
       for (const imageUrl of imagesToRemove) {
         try {
           await this.fileUploadService.deleteFile(imageUrl);
-          console.log('✅ Specific image deleted from S3:', imageUrl);
+          this.logger.log(`✅ Specific image deleted from S3: ${imageUrl}`);
         } catch (error: any) {
-          console.error('❌ Failed to delete specific image from S3:', error);
+          this.logger.error(
+            '❌ Failed to delete specific image from S3:',
+            error?.message || error,
+          );
         }
       }
     } else if (images && images.length > 0 && !hasExistingImagesToKeep) {
@@ -395,14 +397,13 @@ export class SpecialsService {
       if (existingSpecial.image_url) {
         try {
           await this.fileUploadService.deleteFile(existingSpecial.image_url);
-          console.log(
-            '✅ Old special image deleted from S3 (complete replacement):',
-            existingSpecial.image_url,
+          this.logger.log(
+            `✅ Old special image deleted from S3 (complete replacement): ${existingSpecial.image_url}`,
           );
         } catch (error: any) {
-          console.error(
+          this.logger.error(
             '❌ Failed to delete old special image from S3:',
-            error,
+            error?.message || error,
           );
         }
       }
@@ -411,14 +412,13 @@ export class SpecialsService {
         for (const imageUrl of existingSpecial.image_urls) {
           try {
             await this.fileUploadService.deleteFile(imageUrl);
-            console.log(
-              '✅ Old special image deleted from S3 (complete replacement):',
-              imageUrl,
+            this.logger.log(
+              `✅ Old special image deleted from S3 (complete replacement): ${imageUrl}`,
             );
           } catch (error: any) {
-            console.error(
+            this.logger.error(
               '❌ Failed to delete old special image from S3:',
-              error,
+              error?.message || error,
             );
           }
         }
@@ -427,12 +427,14 @@ export class SpecialsService {
 
     // Fetch and return the updated special
     const updatedSpecial = await this.findOne(id);
-    console.log('🔍 SpecialsService - Final special after update:', {
-      id: updatedSpecial.id,
-      image_url: updatedSpecial.image_url,
-      image_urls: updatedSpecial.image_urls,
-      description: updatedSpecial.description,
-    });
+    this.logger.log(
+      `🔍 Final special after update: ${JSON.stringify({
+        id: updatedSpecial.id,
+        image_url: updatedSpecial.image_url,
+        image_urls: updatedSpecial.image_urls,
+        description: updatedSpecial.description,
+      })}`,
+    );
 
     return updatedSpecial;
   }
@@ -444,9 +446,14 @@ export class SpecialsService {
     if (special.image_url) {
       try {
         await this.fileUploadService.deleteFile(special.image_url);
-        console.log('✅ Special image deleted from S3:', special.image_url);
+        this.logger.log(
+          `✅ Special image deleted from S3: ${special.image_url}`,
+        );
       } catch (error: any) {
-        console.error('❌ Failed to delete special image from S3:', error);
+        this.logger.error(
+          '❌ Failed to delete special image from S3:',
+          error?.message || error,
+        );
         // Continue with special deletion even if S3 deletion fails
       }
     }
@@ -456,9 +463,12 @@ export class SpecialsService {
       for (const imageUrl of special.image_urls) {
         try {
           await this.fileUploadService.deleteFile(imageUrl);
-          console.log('✅ Special image deleted from S3:', imageUrl);
+          this.logger.log(`✅ Special image deleted from S3: ${imageUrl}`);
         } catch (error: any) {
-          console.error('❌ Failed to delete special image from S3:', error);
+          this.logger.error(
+            '❌ Failed to delete special image from S3:',
+            error?.message || error,
+          );
           // Continue with special deletion even if S3 deletion fails
         }
       }

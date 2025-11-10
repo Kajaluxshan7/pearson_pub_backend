@@ -14,6 +14,7 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
+import { AuthenticatedRequest } from '../common/types/authenticated-request.interface';
 import { EventsService } from './events.service';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
@@ -22,10 +23,13 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AdminRole } from '../admins/entities/admin.entity';
 import { FileUploadService } from '../common/services/file-upload.service';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Controller('events')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class EventsController {
+  private readonly logger = new LoggerService(EventsController.name);
+
   constructor(
     private readonly eventsService: EventsService,
     private readonly fileUploadService: FileUploadService,
@@ -39,17 +43,25 @@ export class EventsController {
 
   @Post()
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  async create(@Body() createEventDto: CreateEventDto, @Request() req) {
+  async create(
+    @Body() createEventDto: CreateEventDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     try {
-      console.log('🔄 Events Controller - Create request:', createEventDto);
+      this.logger.log(
+        `🔄 Events Controller - Create request: ${JSON.stringify(createEventDto)}`,
+      );
       const result = await this.eventsService.create(
         createEventDto,
         req.user.id,
       );
-      console.log('✅ Events Controller - Create successful');
+      this.logger.log('✅ Events Controller - Create successful');
       return result;
     } catch (error: any) {
-      console.error('❌ Events Controller - Create error:', error);
+      this.logger.error(
+        '❌ Events Controller - Create error:',
+        error?.message || error,
+      );
       throw error;
     }
   }
@@ -85,22 +97,24 @@ export class EventsController {
   async update(
     @Param('id') id: string,
     @Body() updateEventDto: UpdateEventDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     try {
-      console.log('🔄 Events Controller - Update request:', {
-        id,
-        updateEventDto,
-      });
+      this.logger.log(
+        `🔄 Events Controller - Update request: ${JSON.stringify({ id, updateEventDto })}`,
+      );
       const result = await this.eventsService.update(
         id,
         updateEventDto,
         req.user.id,
       );
-      console.log('✅ Events Controller - Update successful');
+      this.logger.log('✅ Events Controller - Update successful');
       return result;
     } catch (error: any) {
-      console.error('❌ Events Controller - Update error:', error);
+      this.logger.error(
+        '❌ Events Controller - Update error:',
+        error?.message || error,
+      );
       throw error;
     }
   }
@@ -108,12 +122,15 @@ export class EventsController {
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
   async remove(@Param('id') id: string) {
     try {
-      console.log('🔄 Events Controller - Delete request for ID:', id);
+      this.logger.log(`🔄 Events Controller - Delete request for ID: ${id}`);
       await this.eventsService.remove(id);
-      console.log('✅ Events Controller - Delete successful');
+      this.logger.log('✅ Events Controller - Delete successful');
       return { message: 'Event deleted successfully' };
     } catch (error: any) {
-      console.error('❌ Events Controller - Delete error:', error);
+      this.logger.error(
+        '❌ Events Controller - Delete error:',
+        error?.message || error,
+      );
       throw error;
     }
   }
@@ -167,7 +184,10 @@ export class EventsController {
         message: `Successfully uploaded ${files.length} image(s)`,
       };
     } catch (error: any) {
-      console.error('❌ Events Controller - Upload error:', error);
+      this.logger.error(
+        '❌ Events Controller - Upload error:',
+        error?.message || error,
+      );
       throw error;
     }
   }
@@ -205,7 +225,10 @@ export class EventsController {
         message: 'Image uploaded successfully',
       };
     } catch (error: any) {
-      console.error('❌ Events Controller - Upload error:', error);
+      this.logger.error(
+        '❌ Events Controller - Upload error:',
+        error?.message || error,
+      );
       throw error;
     }
   }
@@ -214,12 +237,17 @@ export class EventsController {
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
   async deleteImage(@Param('id') imageUrl: string) {
     try {
-      console.log('🔄 Events Controller - Delete image request for:', imageUrl);
+      this.logger.log(
+        `🔄 Events Controller - Delete image request for: ${imageUrl}`,
+      );
       await this.fileUploadService.deleteFile(decodeURIComponent(imageUrl));
-      console.log('✅ Events Controller - Delete image successful');
+      this.logger.log('✅ Events Controller - Delete image successful');
       return { message: 'Image deleted successfully' };
     } catch (error: any) {
-      console.error('❌ Events Controller - Delete image error:', error);
+      this.logger.error(
+        '❌ Events Controller - Delete image error:',
+        error?.message || error,
+      );
       throw error;
     }
   }

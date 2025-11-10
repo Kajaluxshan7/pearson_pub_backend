@@ -29,7 +29,7 @@ const AppDataSource = new DataSource({
   migrationsTableName: 'migrations_history',
   synchronize: false, // Always false for migrations
   logging: ['query', 'error'],
-  ssl: false, // Disable SSL for local PostgreSQL connections
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
 });
 
 export default AppDataSource;

@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { toZonedTime, fromZonedTime, format } from 'date-fns-tz';
 import { parseISO, isValid } from 'date-fns';
+import { LoggerService } from '../logger/logger.service';
 
 @Injectable()
 export class TimezoneService {
+  private readonly logger = new LoggerService(TimezoneService.name);
   private readonly TIMEZONE = 'America/Toronto'; // Eastern Time Zone
 
   /**
@@ -45,8 +47,8 @@ export class TimezoneService {
       throw new Error('Valid UTC date is required');
     }
 
-  const easternDate = this.convertUtcToEastern(utcDate);
-  return format(easternDate, formatString, { timeZone: this.TIMEZONE });
+    const easternDate = this.convertUtcToEastern(utcDate);
+    return format(easternDate, formatString, { timeZone: this.TIMEZONE });
   }
 
   /**
@@ -75,9 +77,9 @@ export class TimezoneService {
     if (!dateTimeString) {
       throw new Error('DateTime string is required');
     }
-  const parsed: Date = parseISO(dateTimeString) as Date;
-  if (!isValid(parsed)) throw new Error('Invalid datetime format');
-  return fromZonedTime(parsed as Date, this.TIMEZONE) as Date;
+    const parsed: Date = parseISO(dateTimeString) as Date;
+    if (!isValid(parsed)) throw new Error('Invalid datetime format');
+    return fromZonedTime(parsed as Date, this.TIMEZONE) as Date;
   }
 
   /**
@@ -117,8 +119,11 @@ export class TimezoneService {
       }
 
       throw new Error(`Unable to parse datetime: ${cleanedString}`);
-    } catch (error) {
-      console.error('Error parsing event datetime:', error);
+    } catch (error: any) {
+      this.logger.error(
+        'Error parsing event datetime:',
+        error?.message || error,
+      );
       throw new Error(`Invalid datetime format: ${cleanedString}`);
     }
   }
@@ -137,8 +142,8 @@ export class TimezoneService {
       throw new Error('Valid UTC date is required');
     }
 
-  const easternDate = this.convertUtcToEastern(utcDate);
-  return format(easternDate, formatString, { timeZone: this.TIMEZONE });
+    const easternDate = this.convertUtcToEastern(utcDate);
+    return format(easternDate, formatString, { timeZone: this.TIMEZONE });
   }
 
   /**
@@ -151,8 +156,8 @@ export class TimezoneService {
       throw new Error('Valid UTC date is required');
     }
 
-  const easternDate = this.convertUtcToEastern(utcDate);
-  return format(easternDate, 'MMM d, h a', { timeZone: this.TIMEZONE });
+    const easternDate = this.convertUtcToEastern(utcDate);
+    return format(easternDate, 'MMM d, h a', { timeZone: this.TIMEZONE });
   }
 
   /**
@@ -161,8 +166,8 @@ export class TimezoneService {
    * @returns true if DST is active
    */
   isDaylightSavingTime(date: Date = new Date()): boolean {
-  const easternDate = this.convertUtcToEastern(date);
-  const offset = format(easternDate, 'xxx', { timeZone: this.TIMEZONE });
+    const easternDate = this.convertUtcToEastern(date);
+    const offset = format(easternDate, 'xxx', { timeZone: this.TIMEZONE });
     return offset === '-04:00'; // EDT (UTC-4), vs EST (UTC-5)
   }
 
@@ -177,7 +182,7 @@ export class TimezoneService {
     offset: string;
     isDST: boolean;
   } {
-  const easternDate = this.convertUtcToEastern(date);
+    const easternDate = this.convertUtcToEastern(date);
     const isDST = this.isDaylightSavingTime(date);
 
     return {
@@ -256,7 +261,10 @@ export class TimezoneService {
 
       return currentMinutes >= openMinutes && currentMinutes <= closeMinutes;
     } catch (error: any) {
-      console.error('Error checking business hours:', error);
+      this.logger.error(
+        'Error checking business hours:',
+        error?.message || error,
+      );
       return false;
     }
   }
@@ -285,7 +293,10 @@ export class TimezoneService {
 
       return format(dateTime, 'h:mm a', { timeZone: this.TIMEZONE });
     } catch (error: any) {
-      console.error('Error formatting time for display:', error);
+      this.logger.error(
+        'Error formatting time for display:',
+        error?.message || error,
+      );
       return timeString;
     }
   }
@@ -452,7 +463,10 @@ export class TimezoneService {
         timeZone: this.TIMEZONE,
       });
     } catch (error: any) {
-      console.error('Error formatting for datetime input:', error);
+      this.logger.error(
+        'Error formatting for datetime input:',
+        error?.message || error,
+      );
       return '';
     }
   }

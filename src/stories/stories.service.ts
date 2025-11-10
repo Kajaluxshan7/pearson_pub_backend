@@ -9,9 +9,12 @@ import { Story } from './entities/story.entity';
 import { CreateStoryDto } from './dto/create-story.dto';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import { FileUploadService } from '../common/services/file-upload.service';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Injectable()
 export class StoriesService {
+  private readonly logger = new LoggerService(StoriesService.name);
+
   constructor(
     @InjectRepository(Story)
     private storiesRepository: Repository<Story>,
@@ -106,11 +109,14 @@ export class StoriesService {
   ): Promise<Story> {
     const story = await this.findOne(id);
 
-    console.log('🔄 StoriesService - Current story images:', story.images);
-    console.log('🔄 StoriesService - Update DTO:', updateStoryDto);
-    console.log(
-      '🔄 StoriesService - New images count:',
-      newImages?.length || 0,
+    this.logger.log(
+      `🔄 StoriesService - Current story images: ${JSON.stringify(story.images)}`,
+    );
+    this.logger.log(
+      `🔄 StoriesService - Update DTO: ${JSON.stringify(updateStoryDto)}`,
+    );
+    this.logger.log(
+      `🔄 StoriesService - New images count: ${newImages?.length || 0}`,
     );
 
     // Check if specific images are being removed (when frontend sends removeImages array)
@@ -121,10 +127,11 @@ export class StoriesService {
     const hasExistingImagesToKeep =
       Array.isArray(existingImagesToKeep) && existingImagesToKeep.length > 0;
 
-    console.log('🔄 StoriesService - Images to remove:', imagesToRemove);
-    console.log(
-      '🔄 StoriesService - Existing images to keep:',
-      existingImagesToKeep,
+    this.logger.log(
+      `🔄 StoriesService - Images to remove: ${JSON.stringify(imagesToRemove)}`,
+    );
+    this.logger.log(
+      `🔄 StoriesService - Existing images to keep: ${JSON.stringify(existingImagesToKeep)}`,
     );
 
     let newImageUrls: string[] = [];
@@ -132,7 +139,7 @@ export class StoriesService {
 
     // Upload new images first if provided
     if (newImages && newImages.length > 0) {
-      console.log('🔄 StoriesService - Uploading new images...');
+      this.logger.log('🔄 StoriesService - Uploading new images...');
       const limitedImages = newImages.slice(0, 5); // Limit to 5 images
 
       const uploadResults = await this.fileUploadService.uploadMultipleFiles(
@@ -140,7 +147,9 @@ export class StoriesService {
         'stories',
       );
       newImageUrls = uploadResults.map((result) => result.url);
-      console.log('✅ StoriesService - New images uploaded:', newImageUrls);
+      this.logger.log(
+        `✅ StoriesService - New images uploaded: ${JSON.stringify(newImageUrls)}`,
+      );
     }
 
     // Handle image URL updates based on different scenarios
@@ -149,9 +158,8 @@ export class StoriesService {
       if (hasExistingImagesToKeep) {
         // Use the explicitly provided list of images to keep
         finalImages = [...existingImagesToKeep];
-        console.log(
-          '🔄 StoriesService - Using explicitly provided existing images to keep:',
-          finalImages,
+        this.logger.log(
+          `🔄 StoriesService - Using explicitly provided existing images to keep: ${JSON.stringify(finalImages)}`,
         );
       } else {
         // Only removeImages provided, keep all current images except those marked for removal
@@ -159,18 +167,16 @@ export class StoriesService {
         finalImages = currentImages.filter(
           (url) => !imagesToRemove.includes(url),
         );
-        console.log(
-          '🔄 StoriesService - Removing specific images, keeping rest:',
-          finalImages,
+        this.logger.log(
+          `🔄 StoriesService - Removing specific images, keeping rest: ${JSON.stringify(finalImages)}`,
         );
       }
 
       // Add new images to the final list
       if (newImages && newImages.length > 0) {
         finalImages = [...finalImages, ...newImageUrls];
-        console.log(
-          '🔄 StoriesService - Added new images to existing ones:',
-          finalImages,
+        this.logger.log(
+          `🔄 StoriesService - Added new images to existing ones: ${JSON.stringify(finalImages)}`,
         );
       }
     } else {
@@ -179,16 +185,14 @@ export class StoriesService {
         // New images uploaded but no existing image management - ADD to current images (don't replace)
         const currentImages = story.images || [];
         finalImages = [...currentImages, ...newImageUrls];
-        console.log(
-          '🔄 StoriesService - Adding new images to current images (preserving existing):',
-          finalImages,
+        this.logger.log(
+          `🔄 StoriesService - Adding new images to current images (preserving existing): ${JSON.stringify(finalImages)}`,
         );
       } else {
         // No changes to images, keep current images
         finalImages = story.images || [];
-        console.log(
-          '🔄 StoriesService - No image changes, keeping current images:',
-          finalImages,
+        this.logger.log(
+          `🔄 StoriesService - No image changes, keeping current images: ${JSON.stringify(finalImages)}`,
         );
       }
     }
@@ -200,7 +204,10 @@ export class StoriesService {
         try {
           await this.fileUploadService.deleteMultipleFiles(newImageUrls);
         } catch (error: any) {
-          console.error('Error cleaning up uploaded images:', error);
+          this.logger.error(
+            'Error cleaning up uploaded images:',
+            error?.message || error,
+          );
         }
       }
       throw new BadRequestException(
@@ -216,36 +223,42 @@ export class StoriesService {
     story.images = finalImages;
     story.lastEditedByAdminId = adminId;
 
-    console.log('🔄 StoriesService - Final images for story:', finalImages);
+    this.logger.log(
+      `🔄 StoriesService - Final images for story: ${JSON.stringify(finalImages)}`,
+    );
     const savedStory = await this.storiesRepository.save(story);
-    console.log('✅ StoriesService - Story saved to database');
+    this.logger.log('✅ StoriesService - Story saved to database');
 
     // Delete old images from S3 if needed (after successful database update)
     // ONLY delete images that are explicitly marked for removal
     if (hasImagesToRemove && imagesToRemove.length > 0) {
-      console.log(
-        '🔄 StoriesService - Deleting specific images marked for removal from S3:',
-        imagesToRemove,
+      this.logger.log(
+        `🔄 StoriesService - Deleting specific images marked for removal from S3: ${JSON.stringify(imagesToRemove)}`,
       );
       for (const imageUrl of imagesToRemove) {
         try {
           await this.fileUploadService.deleteFile(imageUrl);
-          console.log('✅ Specific image deleted from S3:', imageUrl);
+          this.logger.log(`✅ Specific image deleted from S3: ${imageUrl}`);
         } catch (error: any) {
-          console.error('❌ Failed to delete specific image from S3:', error);
+          this.logger.error(
+            '❌ Failed to delete specific image from S3:',
+            error?.message || error,
+          );
         }
       }
     } else {
-      console.log(
+      this.logger.log(
         '🔄 StoriesService - No images marked for removal, preserving all existing images',
       );
     }
 
-    console.log('🔍 StoriesService - Final story after update:', {
-      id: savedStory.id,
-      images: savedStory.images,
-      story_name: savedStory.story_name,
-    });
+    this.logger.log(
+      `🔍 StoriesService - Final story after update: ${JSON.stringify({
+        id: savedStory.id,
+        images: savedStory.images,
+        story_name: savedStory.story_name,
+      })}`,
+    );
 
     return savedStory;
   }
@@ -258,7 +271,10 @@ export class StoriesService {
       try {
         await this.fileUploadService.deleteMultipleFiles(story.images);
       } catch (error: any) {
-        console.error('Error deleting story images from S3:', error);
+        this.logger.error(
+          'Error deleting story images from S3:',
+          error?.message || error,
+        );
         // Don't fail the deletion if S3 deletion fails
       }
     }
@@ -304,7 +320,10 @@ export class StoriesService {
     try {
       await this.fileUploadService.deleteFile(imageUrl);
     } catch (error: any) {
-      console.error('Error deleting image from S3:', error);
+      this.logger.error(
+        'Error deleting image from S3:',
+        error?.message || error,
+      );
       // Continue with removal from database even if S3 deletion fails
     }
 

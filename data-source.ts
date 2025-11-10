@@ -1,15 +1,17 @@
-// data-source.ts (keep at repo root or move into src — both ok)
-// ✅ Use paths relative to the compiled folder (dist), not /src
+// data-source.ts - TypeORM CLI Data Source Configuration
+// This file is used by TypeORM CLI for migrations
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
-import path from 'node:path';
+import * as path from 'path';
 
-// Load env: in Docker you'll pass .env; locally you may use .develop.env
+// Load environment variables
 const envFile = process.env.MIGRATION_MODE ? '.env' : '.develop.env';
 config({ path: envFile });
 
+// Parse database configuration
 const databaseUrl = process.env.DATABASE_URL;
 let databaseConfig: any;
+
 if (databaseUrl) {
   const url = new URL(databaseUrl);
   databaseConfig = {
@@ -29,10 +31,20 @@ if (databaseUrl) {
   };
 }
 
-// IMPORTANT: __dirname is `dist/` at runtime.
-// Do NOT put `/src/` in these globs.
-const ENTITIES_GLOB = __dirname + '/**/*.entity.{js,ts}';
-const MIGRATIONS_GLOB = __dirname + '/src/migrations/*.{js,ts}';
+// Determine if we're running from compiled JavaScript or TypeScript source
+const isCompiled = __filename.endsWith('.js');
+const baseDir = isCompiled ? __dirname : path.join(__dirname, 'dist');
+
+// Configure paths based on execution context
+// When running compiled code (production/migrations), use dist/ paths
+// When running from source (development), use src/ paths
+const ENTITIES_GLOB = isCompiled
+  ? path.join(__dirname, '**', '*.entity.js')
+  : path.join(__dirname, 'src', '**', '*.entity.ts');
+
+const MIGRATIONS_GLOB = isCompiled
+  ? path.join(__dirname, 'migrations', '*.js')
+  : path.join(__dirname, 'src', 'migrations', '*.ts');
 
 const AppDataSource = new DataSource({
   type: 'postgres',
@@ -40,11 +52,9 @@ const AppDataSource = new DataSource({
   entities: [ENTITIES_GLOB],
   migrations: [MIGRATIONS_GLOB],
   migrationsTableName: 'migrations_history',
-  synchronize: false,
-  logging: process.env.MIGRATION_MODE ? ['error'] : ['query', 'error'],
-  // If your DB requires SSL in prod, toggle via env:
-  // ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
-  ssl: false,
+  synchronize: false, // Always use migrations in production
+  logging: process.env.LOG_LEVEL === 'debug' ? ['query', 'error'] : ['error'],
+  ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
 });
 
 export default AppDataSource;

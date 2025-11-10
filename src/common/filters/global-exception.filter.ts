@@ -4,14 +4,18 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
-  Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { QueryFailedError } from 'typeorm';
+import { LoggerService } from '../logger/logger.service';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
-  private readonly logger = new Logger(GlobalExceptionFilter.name);
+  constructor(private readonly logger?: LoggerService) {
+    if (!logger) {
+      this.logger = new LoggerService('GlobalExceptionFilter');
+    }
+  }
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
@@ -58,14 +62,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
 
     // Log the error
-    this.logger.error(`HTTP ${status} Error: ${message}`, {
-      method: request.method,
-      url: request.url,
-      body: request.body,
-      params: request.params,
-      query: request.query,
-      error: exception,
-    });
+    const errorContext = `HTTP ${status} Error: ${message}\nMethod: ${request.method}\nURL: ${request.url}\nBody: ${JSON.stringify(request.body)}\nParams: ${JSON.stringify(request.params)}\nQuery: ${JSON.stringify(request.query)}`;
+    this.logger!.error(
+      errorContext,
+      exception instanceof Error ? exception.stack : '',
+      'GlobalExceptionFilter',
+    );
 
     // Send response
     response.status(status).json({

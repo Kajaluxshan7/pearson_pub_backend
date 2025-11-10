@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { envValidationSchema } from './config/env.validation';
 import { AuthModule } from './auth/auth.module';
 import { AdminsModule } from './admins/admins.module';
 import { CategoriesModule } from './modules/categories/categories.module';
@@ -18,13 +19,20 @@ import { PublicApiModule } from './public-api/public-api.module';
 import { StoriesModule } from './stories/stories.module';
 import { TimezoneService } from './common/services/timezone.service';
 import { HealthController } from './common/health.controller';
+import { LoggerModule } from './common/logger/logger.module';
 
 @Module({
   imports: [
+    LoggerModule,
     ConfigModule.forRoot({
       isGlobal: true, // Makes the configuration available globally
-      // envFilePath: ['.env.development', '.env'], // Specify the path to your environment file
-      envFilePath: '.develop.env', // Specify the path to your environment file
+      envFilePath:
+        process.env.NODE_ENV === 'production' ? '.env' : '.develop.env',
+      validationSchema: envValidationSchema,
+      validationOptions: {
+        abortEarly: false, // Show all validation errors, not just the first one
+        allowUnknown: true, // Allow other environment variables not in schema
+      },
     }),
     TypeOrmModule.forRootAsync({
       // Use forRootAsync for async configuration
@@ -62,7 +70,10 @@ import { HealthController } from './common/health.controller';
           migrations: [__dirname + '/migrations/*{.ts,.js}'],
           synchronize: false, // Always use migrations instead of schema synchronization
           logging: ['query', 'error'],
-          ssl: false, // Disable SSL for local PostgreSQL connections
+          ssl:
+            configService.get<string>('DB_SSL') === 'true'
+              ? { rejectUnauthorized: false }
+              : false,
         };
       },
       inject: [ConfigService], // Inject ConfigService

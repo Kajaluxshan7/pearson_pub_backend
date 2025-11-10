@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,6 +12,8 @@ import { UpdateAddonDto } from './dto/update-addon.dto';
 
 @Injectable()
 export class AddonsService {
+  private readonly logger = new Logger(AddonsService.name);
+
   constructor(
     @InjectRepository(Addon)
     private addonsRepository: Repository<Addon>,
@@ -40,8 +43,13 @@ export class AddonsService {
         lastEditedByAdminId: adminId,
       });
       return this.addonsRepository.save(addon);
-    } catch (error: any) {
-      if (error.code === '23505') {
+    } catch (error) {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        (error as { code: string }).code === '23505'
+      ) {
         // PostgreSQL unique constraint violation
         throw new ConflictException(
           `Addon '${createAddonDto.name}' already exists for this item`,
@@ -140,11 +148,11 @@ export class AddonsService {
 
   async duplicate(id: string, adminId: string): Promise<Addon> {
     try {
-      console.log('🔄 Duplicating addon:', { id, adminId });
+      this.logger.log('Duplicating addon', { id, adminId });
 
       // Find the original addon
       const originalAddon = await this.findOne(id);
-      console.log('📄 Found original addon:', originalAddon);
+      this.logger.log('Found original addon', { addonId: originalAddon.id });
 
       // Create a new addon with copied data
       const duplicateData = {
@@ -181,14 +189,24 @@ export class AddonsService {
       }
 
       const duplicatedAddon = await this.create(duplicateData, adminId);
-      console.log('✅ Addon duplicated successfully:', duplicatedAddon);
+      this.logger.log('Addon duplicated successfully', {
+        addonId: duplicatedAddon.id,
+      });
 
       return duplicatedAddon;
-    } catch (error: any) {
-      console.error('❌ Error duplicating addon:', error);
+    } catch (error) {
+      this.logger.error(
+        'Error duplicating addon',
+        error instanceof Error ? error.stack : error,
+      );
 
       // Handle unique constraint violation specifically
-      if (error.code === '23505') {
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        (error as { code: string }).code === '23505'
+      ) {
         // PostgreSQL unique violation
         throw new Error('An addon with this name already exists for this item');
       }

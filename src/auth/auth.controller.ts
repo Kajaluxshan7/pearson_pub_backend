@@ -12,6 +12,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Response as ExpressResponse } from 'express';
+import { AuthenticatedRequest } from '../common/types/authenticated-request.interface';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { InviteAdminDto } from './dto/invite-admin.dto';
@@ -23,9 +24,12 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { Roles } from './decorators/roles.decorator';
 import { AdminRole } from '../admins/entities/admin.entity';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Controller('auth')
 export class AuthController {
+  private readonly logger = new LoggerService(AuthController.name);
+
   constructor(private authService: AuthService) {}
 
   @Get('verify-email')
@@ -35,7 +39,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Response({ passthrough: true }) res: ExpressResponse,
   ) {
     // Passport sets authenticated admin in req.user by convention
@@ -63,14 +67,17 @@ export class AuthController {
   }
   @Get('google')
   @UseGuards(GoogleAuthGuard)
-  async googleAuth(@Request() req) {
+  async googleAuth(@Request() req: AuthenticatedRequest) {
     // Guard will redirect to Google
   }
 
   @Get('google/callback')
   @UseGuards(GoogleAuthGuard)
-  async googleAuthCallback(@Request() req, @Response() res: ExpressResponse) {
-    const accessToken = this.authService.generateAuthCookie(req.admin);
+  async googleAuthCallback(
+    @Request() req: AuthenticatedRequest,
+    @Response() res: ExpressResponse,
+  ) {
+    const accessToken = this.authService.generateAuthCookie(req.user as any);
 
     // Set HTTP-only cookie
     res.cookie('access_token', accessToken, {
@@ -87,7 +94,7 @@ export class AuthController {
   }
   @UseGuards(JwtAuthGuard)
   @Get('profile')
-  async getProfile(@Request() req) {
+  async getProfile(@Request() req: AuthenticatedRequest) {
     return await this.authService.getProfile(req.user.id);
   }
 
@@ -99,7 +106,10 @@ export class AuthController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(AdminRole.SUPERADMIN)
   @Post('invite-admin')
-  async inviteAdmin(@Body() inviteAdminDto: InviteAdminDto, @Request() req) {
+  async inviteAdmin(
+    @Body() inviteAdminDto: InviteAdminDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     return this.authService.inviteAdmin(inviteAdminDto, req.user.id);
   }
 
@@ -117,15 +127,18 @@ export class AuthController {
     } catch (error: unknown) {
       // Log error details for debugging
       if (typeof error === 'object' && error !== null) {
-        console.error('[setup-password] Error:', {
-          message: (error as { message?: string }).message,
-          name: (error as { name?: string }).name,
-          stack: (error as { stack?: string }).stack,
-          status: (error as { status?: number }).status,
-          response: (error as { response?: unknown }).response,
-        });
+        this.logger.error(
+          '[setup-password] Error:',
+          JSON.stringify({
+            message: (error as { message?: string }).message,
+            name: (error as { name?: string }).name,
+            stack: (error as { stack?: string }).stack,
+            status: (error as { status?: number }).status,
+            response: (error as { response?: unknown }).response,
+          }),
+        );
       } else {
-        console.error('[setup-password] Error:', error);
+        this.logger.error('[setup-password] Error:', String(error));
       }
       // Return error message and status code to frontend
       throw error;
@@ -134,7 +147,10 @@ export class AuthController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(AdminRole.SUPERADMIN)
   @Delete('admin/:id')
-  async deleteAdmin(@Param('id') id: string, @Request() req) {
-    return this.authService.deleteAdmin(id, req.user);
+  async deleteAdmin(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.authService.deleteAdmin(id, req.user as any);
   }
 }

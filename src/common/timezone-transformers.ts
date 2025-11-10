@@ -1,5 +1,8 @@
 import { Transform } from 'class-transformer';
 import { TimeService } from './time';
+import { LoggerService } from './logger/logger.service';
+
+const logger = new LoggerService('TimezoneTransformers');
 
 /**
  * Transformer decorator for converting UTC dates from database to Toronto timezone for API responses
@@ -11,7 +14,10 @@ export function TorontoDateTime() {
     try {
       return TimeService.formatTorontoString(value, 'yyyy-MM-dd HH:mm:ss zzz');
     } catch (error: any) {
-      console.error('Error transforming to Toronto datetime:', error);
+      logger.error(
+        'Error transforming to Toronto datetime:',
+        error?.message || error,
+      );
       return value;
     }
   });
@@ -28,7 +34,10 @@ export function TorontoDateTimeISO() {
       const torontoDate = TimeService.toTorontoFromUTC(value);
       return torontoDate.toISOString();
     } catch (error: any) {
-      console.error('Error transforming to Toronto ISO:', error);
+      logger.error(
+        'Error transforming to Toronto ISO:',
+        error?.message || error,
+      );
       return value;
     }
   });
@@ -44,7 +53,10 @@ export function FromTorontoDateTime() {
     try {
       return TimeService.toUTCFromToronto(value);
     } catch (error: any) {
-      console.error('Error transforming from Toronto datetime:', error);
+      logger.error(
+        'Error transforming from Toronto datetime:',
+        error?.message || error,
+      );
       throw new Error(`Invalid datetime format: ${value}`);
     }
   });
@@ -60,7 +72,10 @@ export function FromTorontoDateTimeInput() {
     try {
       return TimeService.parseTorontoInputToUTC(value);
     } catch (error: any) {
-      console.error('Error transforming from Toronto datetime input:', error);
+      logger.error(
+        'Error transforming from Toronto datetime input:',
+        error?.message || error,
+      );
       throw new Error(`Invalid datetime input format: ${value}`);
     }
   });

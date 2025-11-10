@@ -6,9 +6,12 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { FileUploadService } from '../common/services/file-upload.service';
 import { TimezoneService } from '../common/services/timezone.service';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Injectable()
 export class EventsService {
+  private readonly logger = new LoggerService(EventsService.name);
+
   constructor(
     @InjectRepository(Event)
     private eventsRepository: Repository<Event>,
@@ -110,9 +113,8 @@ export class EventsService {
               await this.fileUploadService.getMultipleSignedUrls(event.images);
             return { ...event, images: signedUrls };
           } catch (error: any) {
-            console.warn(
-              `Failed to generate signed URLs for event ${event.id}:`,
-              error,
+            this.logger.log(
+              `Failed to generate signed URLs for event ${event.id}: ${error?.message || error}`,
             );
             return event;
           }
@@ -147,9 +149,8 @@ export class EventsService {
         );
         event.images = signedUrls;
       } catch (error: any) {
-        console.warn(
-          `Failed to generate signed URLs for event ${event.id}:`,
-          error,
+        this.logger.log(
+          `Failed to generate signed URLs for event ${event.id}: ${error?.message || error}`,
         );
       }
     }
@@ -195,7 +196,7 @@ export class EventsService {
     // Clean up images from S3 before deleting the event
     if (event.images && event.images.length > 0) {
       try {
-        console.log(
+        this.logger.log(
           `🔄 Cleaning up ${event.images.length} images for event ${id}`,
         );
         await Promise.all(
@@ -203,9 +204,12 @@ export class EventsService {
             this.fileUploadService.deleteFile(imageUrl),
           ),
         );
-        console.log('✅ Images cleaned up successfully');
+        this.logger.log('✅ Images cleaned up successfully');
       } catch (error: any) {
-        console.error('⚠️ Error cleaning up images:', error);
+        this.logger.error(
+          '⚠️ Error cleaning up images:',
+          error?.message || error,
+        );
         // Continue with event deletion even if image cleanup fails
       }
     }

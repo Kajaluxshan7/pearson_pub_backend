@@ -18,15 +18,19 @@ import { ItemsService } from './items.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { ReorderItemsDto } from './dto/reorder-items.dto';
+import { AuthenticatedRequest } from '../common/types/authenticated-request.interface';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AdminRole } from '../admins/entities/admin.entity';
 import { FileUploadService } from '../common/services/file-upload.service';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Controller('items')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ItemsController {
+  private readonly logger = new LoggerService(ItemsController.name);
+
   constructor(
     private readonly itemsService: ItemsService,
     private readonly fileUploadService: FileUploadService,
@@ -40,17 +44,22 @@ export class ItemsController {
 
   @Post()
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  async create(@Body() createItemDto: CreateItemDto, @Request() req) {
+  async create(
+    @Body() createItemDto: CreateItemDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     try {
-      console.log('🔄 Items Controller - Create request:', {
-        createItemDto,
-        userId: req.user.id,
-      });
+      this.logger.log(
+        `🔄 Items Controller - Create request: ${JSON.stringify({ createItemDto, userId: req.user.id })}`,
+      );
       const result = await this.itemsService.create(createItemDto, req.user.id);
-      console.log('✅ Items Controller - Create successful');
+      this.logger.log('✅ Items Controller - Create successful');
       return result;
     } catch (error: any) {
-      console.error('❌ Items Controller - Create error:', error);
+      this.logger.error(
+        '❌ Items Controller - Create error:',
+        error?.message || error,
+      );
       throw error;
     }
   }
@@ -105,23 +114,24 @@ export class ItemsController {
   async update(
     @Param('id') id: string,
     @Body() updateItemDto: UpdateItemDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     try {
-      console.log('🔄 Items Controller - Update request:', {
-        id,
-        updateItemDto,
-        userId: req.user.id,
-      });
+      this.logger.log(
+        `🔄 Items Controller - Update request: ${JSON.stringify({ id, updateItemDto, userId: req.user.id })}`,
+      );
       const result = await this.itemsService.update(
         id,
         updateItemDto,
         req.user.id,
       );
-      console.log('✅ Items Controller - Update successful');
+      this.logger.log('✅ Items Controller - Update successful');
       return result;
     } catch (error: any) {
-      console.error('❌ Items Controller - Update error:', error);
+      this.logger.error(
+        '❌ Items Controller - Update error:',
+        error?.message || error,
+      );
       throw error;
     }
   }
@@ -130,12 +140,15 @@ export class ItemsController {
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
   async remove(@Param('id') id: string) {
     try {
-      console.log('🔄 Items Controller - Delete request for ID:', id);
+      this.logger.log(`🔄 Items Controller - Delete request for ID: ${id}`);
       await this.itemsService.remove(id);
-      console.log('✅ Items Controller - Delete successful');
+      this.logger.log('✅ Items Controller - Delete successful');
       return { message: 'Item deleted successfully' };
     } catch (error: any) {
-      console.error('❌ Items Controller - Delete error:', error);
+      this.logger.error(
+        '❌ Items Controller - Delete error:',
+        error?.message || error,
+      );
       throw error;
     }
   }
@@ -189,7 +202,10 @@ export class ItemsController {
         message: `Successfully uploaded ${files.length} image(s)`,
       };
     } catch (error: any) {
-      console.error('❌ Items Controller - Upload error:', error);
+      this.logger.error(
+        '❌ Items Controller - Upload error:',
+        error?.message || error,
+      );
       throw error;
     }
   }
@@ -227,7 +243,10 @@ export class ItemsController {
         message: 'Image uploaded successfully',
       };
     } catch (error: any) {
-      console.error('❌ Items Controller - Upload error:', error);
+      this.logger.error(
+        '❌ Items Controller - Upload error:',
+        error?.message || error,
+      );
       throw error;
     }
   }
@@ -241,7 +260,10 @@ export class ItemsController {
       await this.fileUploadService.deleteFile(decodedUrl);
       return { success: true };
     } catch (error: any) {
-      console.error('❌ Items Controller - Delete image error:', error);
+      this.logger.error(
+        '❌ Items Controller - Delete image error:',
+        error?.message || error,
+      );
       throw error;
     }
   }
@@ -255,7 +277,10 @@ export class ItemsController {
       );
       return { signedUrls };
     } catch (error: any) {
-      console.error('❌ Items Controller - Get signed URLs error:', error);
+      this.logger.error(
+        '❌ Items Controller - Get signed URLs error:',
+        error?.message || error,
+      );
       throw error;
     }
   }

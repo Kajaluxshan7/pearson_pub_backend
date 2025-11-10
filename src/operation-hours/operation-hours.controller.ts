@@ -18,10 +18,14 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AdminRole } from '../admins/entities/admin.entity';
 import { DayOfWeek } from './entities/operation-hour.entity';
+import { AuthenticatedRequest } from '../common/types/authenticated-request.interface';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Controller('operation-hours')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class OperationHoursController {
+  private readonly logger = new LoggerService(OperationHoursController.name);
+
   constructor(private readonly operationHoursService: OperationHoursService) {}
 
   @Get('count')
@@ -45,21 +49,20 @@ export class OperationHoursController {
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
   async create(
     @Body() createOperationHourDto: CreateOperationHourDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     try {
-      console.log(
-        '🔄 OperationHours Controller - Create request:',
-        createOperationHourDto,
+      this.logger.log(
+        `🔄 Create request: ${JSON.stringify(createOperationHourDto)}`,
       );
       const result = await this.operationHoursService.create(
         createOperationHourDto,
         req.user.id,
       );
-      console.log('✅ OperationHours Controller - Create successful');
+      this.logger.log('✅ Create successful');
       return result;
     } catch (error: any) {
-      console.error('❌ OperationHours Controller - Create error:', error);
+      this.logger.error('❌ Create error:', error?.message || error);
       throw error;
     }
   }
@@ -87,22 +90,21 @@ export class OperationHoursController {
   async update(
     @Param('id') id: string,
     @Body() updateOperationHourDto: UpdateOperationHourDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     try {
-      console.log('🔄 OperationHours Controller - Update request:', {
-        id,
-        updateOperationHourDto,
-      });
+      this.logger.log(
+        `🔄 Update request: ${JSON.stringify({ id, updateOperationHourDto })}`,
+      );
       const result = await this.operationHoursService.update(
         id,
         updateOperationHourDto,
         req.user.id,
       );
-      console.log('✅ OperationHours Controller - Update successful');
+      this.logger.log('✅ Update successful');
       return result;
     } catch (error: any) {
-      console.error('❌ OperationHours Controller - Update error:', error);
+      this.logger.error('❌ Update error:', error?.message || error);
       throw error;
     }
   }
@@ -111,12 +113,12 @@ export class OperationHoursController {
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
   async remove(@Param('id') id: string) {
     try {
-      console.log('🔄 OperationHours Controller - Delete request for ID:', id);
+      this.logger.log(`🔄 Delete request for ID: ${id}`);
       await this.operationHoursService.remove(id);
-      console.log('✅ OperationHours Controller - Delete successful');
+      this.logger.log('✅ Delete successful');
       return { message: 'Operation hour deleted successfully' };
     } catch (error: any) {
-      console.error('❌ OperationHours Controller - Delete error:', error);
+      this.logger.error('❌ Delete error:', error?.message || error);
       throw error;
     }
   }

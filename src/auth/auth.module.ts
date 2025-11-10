@@ -17,10 +17,25 @@ import { AdminInvitation } from './entities/admin-invitation.entity';
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get<string>('JWT_SECRET') || 'your-secret-key',
-        signOptions: { expiresIn: '24h' },
-      }),
+      useFactory: async (configService: ConfigService) => {
+        const secret = configService.get<string>('JWT_SECRET');
+        if (!secret) {
+          throw new Error(
+            'JWT_SECRET is required but not configured. Please set it in your environment variables.',
+          );
+        }
+        if (secret.length < 32) {
+          throw new Error(
+            'JWT_SECRET must be at least 32 characters long for security.',
+          );
+        }
+        return {
+          secret,
+          signOptions: {
+            expiresIn: configService.get<string>('JWT_EXPIRY') || '1h',
+          },
+        };
+      },
       inject: [ConfigService],
     }),
     TypeOrmModule.forFeature([Admin, AdminInvitation]),

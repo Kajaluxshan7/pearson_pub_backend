@@ -10,9 +10,12 @@ import { Addon } from '../addons/entities/addon.entity';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { FileUploadService } from '../common/services/file-upload.service';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Injectable()
 export class ItemsService {
+  private readonly logger = new LoggerService(ItemsService.name);
+
   constructor(
     @InjectRepository(Item)
     private itemsRepository: Repository<Item>,
@@ -110,9 +113,8 @@ export class ItemsService {
               await this.fileUploadService.getMultipleSignedUrls(item.images);
             return { ...item, images: signedUrls };
           } catch (error: any) {
-            console.warn(
-              `Failed to generate signed URLs for item ${item.id}:`,
-              error,
+            this.logger.log(
+              `Failed to generate signed URLs for item ${item.id}: ${error?.message || error}`,
             );
             return item;
           }
@@ -147,9 +149,8 @@ export class ItemsService {
         );
         item.images = signedUrls;
       } catch (error: any) {
-        console.warn(
-          `Failed to generate signed URLs for item ${item.id}:`,
-          error,
+        this.logger.log(
+          `Failed to generate signed URLs for item ${item.id}: ${error?.message || error}`,
         );
       }
     }
@@ -163,9 +164,11 @@ export class ItemsService {
     adminId: string,
   ): Promise<Item> {
     try {
-      console.log('🔄 Updating item:', { id, updateItemDto, adminId });
+      this.logger.log(
+        `🔄 Updating item: ${JSON.stringify({ id, updateItemDto, adminId })}`,
+      );
       const item = await this.findOne(id);
-      console.log('📄 Found item:', item);
+      this.logger.log(`📄 Found item: ${JSON.stringify(item)}`);
 
       Object.assign(item, updateItemDto);
 
@@ -194,10 +197,12 @@ export class ItemsService {
       item.lastEditedByAdminId = adminId;
 
       const savedItem = await this.itemsRepository.save(item);
-      console.log('✅ Item updated successfully:', savedItem);
+      this.logger.log(
+        `✅ Item updated successfully: ${JSON.stringify(savedItem)}`,
+      );
       return savedItem;
     } catch (error: any) {
-      console.error('❌ Error updating item:', error);
+      this.logger.error('❌ Error updating item:', error?.message || error);
       throw error;
     }
   }
@@ -219,7 +224,7 @@ export class ItemsService {
     // Clean up images from S3 before deleting the item
     if (item.images && item.images.length > 0) {
       try {
-        console.log(
+        this.logger.log(
           `🔄 Cleaning up ${item.images.length} images for item ${id}`,
         );
         await Promise.all(
@@ -227,9 +232,12 @@ export class ItemsService {
             this.fileUploadService.deleteFile(imageUrl),
           ),
         );
-        console.log('✅ Images cleaned up successfully');
+        this.logger.log('✅ Images cleaned up successfully');
       } catch (error: any) {
-        console.error('⚠️ Error cleaning up images:', error);
+        this.logger.error(
+          '⚠️ Error cleaning up images:',
+          error?.message || error,
+        );
         // Continue with item deletion even if image cleanup fails
       }
     }

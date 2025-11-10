@@ -18,11 +18,15 @@ import { UpdateSubstituteSideDto } from './dto/update-substitute-side.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { AuthenticatedRequest } from '../common/types/authenticated-request.interface';
 import { AdminRole } from '../admins/entities/admin.entity';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Controller('substitute-sides')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class SubstituteSidesController {
+  private readonly logger = new LoggerService(SubstituteSidesController.name);
+
   constructor(
     private readonly substituteSidesService: SubstituteSidesService,
   ) {}
@@ -31,21 +35,23 @@ export class SubstituteSidesController {
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
   async create(
     @Body() createSubstituteSideDto: CreateSubstituteSideDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     try {
-      console.log(
-        '🔄 SubstituteSides Controller - Create request:',
-        createSubstituteSideDto,
+      this.logger.log(
+        `🔄 SubstituteSides Controller - Create request: ${JSON.stringify(createSubstituteSideDto)}`,
       );
       const result = await this.substituteSidesService.create(
         createSubstituteSideDto,
         req.user.id,
       );
-      console.log('✅ SubstituteSides Controller - Create successful');
+      this.logger.log('✅ SubstituteSides Controller - Create successful');
       return result;
     } catch (error: any) {
-      console.error('❌ SubstituteSides Controller - Create error:', error);
+      this.logger.error(
+        '❌ SubstituteSides Controller - Create error:',
+        error?.message || error,
+      );
       throw error;
     }
   }
@@ -71,22 +77,24 @@ export class SubstituteSidesController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateSubstituteSideDto: UpdateSubstituteSideDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     try {
-      console.log('🔄 SubstituteSides Controller - Update request:', {
-        id,
-        updateSubstituteSideDto,
-      });
+      this.logger.log(
+        `🔄 SubstituteSides Controller - Update request: ${JSON.stringify({ id, updateSubstituteSideDto })}`,
+      );
       const result = await this.substituteSidesService.update(
         id,
         updateSubstituteSideDto,
         req.user.id,
       );
-      console.log('✅ SubstituteSides Controller - Update successful');
+      this.logger.log('✅ SubstituteSides Controller - Update successful');
       return result;
     } catch (error: any) {
-      console.error('❌ SubstituteSides Controller - Update error:', error);
+      this.logger.error(
+        '❌ SubstituteSides Controller - Update error:',
+        error?.message || error,
+      );
       throw error;
     }
   }
@@ -95,12 +103,15 @@ export class SubstituteSidesController {
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     try {
-      console.log('🔄 SubstituteSides Controller - Delete request for ID:', id);
+      this.logger.log(
+        '🔄 SubstituteSides Controller - Delete request for ID:',
+        id,
+      );
       await this.substituteSidesService.remove(id);
-      console.log('✅ SubstituteSides Controller - Delete successful');
+      this.logger.log('✅ SubstituteSides Controller - Delete successful');
       return { message: 'Substitute side deleted successfully' };
     } catch (error: any) {
-      console.error('❌ SubstituteSides Controller - Delete error:', error);
+      this.logger.error('❌ SubstituteSides Controller - Delete error:', error);
       throw error;
     }
   }

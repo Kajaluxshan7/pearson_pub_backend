@@ -7,9 +7,11 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
+import { LoggerService } from '../logger/logger.service';
 
 @Injectable()
 export class FileUploadService {
+  private readonly logger = new LoggerService(FileUploadService.name);
   private s3Client!: S3Client;
   private bucketName: string;
   private useAWS: boolean;
@@ -58,7 +60,7 @@ export class FileUploadService {
       const base64Data = file.buffer.toString('base64');
       const dataUrl = `data:${file.mimetype};base64,${base64Data}`;
 
-      console.log(
+      this.logger.log(
         `📸 Local upload: ${file.originalname} (${file.size} bytes) - converted to base64 data URL`,
       );
 
@@ -95,7 +97,7 @@ export class FileUploadService {
 
       return { url, signedUrl };
     } catch (error: any) {
-      console.error('Error uploading file to S3:', error);
+      this.logger.error('Error uploading file to S3:', error?.message || error);
       throw new Error('Failed to upload file');
     }
   }
@@ -113,11 +115,11 @@ export class FileUploadService {
       // For development without AWS credentials, just log the deletion
       // Check if it's a data URL (base64 image)
       if (fileUrl.startsWith('data:')) {
-        console.log(
+        this.logger.log(
           `🗑️ Local delete: base64 data URL (${fileUrl.substring(0, 50)}...)`,
         );
       } else {
-        console.log(`🗑️ Mock delete: ${fileUrl}`);
+        this.logger.log(`🗑️ Mock delete: ${fileUrl}`);
       }
       return;
     }
@@ -134,7 +136,10 @@ export class FileUploadService {
     try {
       await this.s3Client.send(command);
     } catch (error: any) {
-      console.error('Error deleting file from S3:', error);
+      this.logger.error(
+        'Error deleting file from S3:',
+        error?.message || error,
+      );
       throw new Error('Failed to delete file');
     }
   }
@@ -168,7 +173,10 @@ export class FileUploadService {
         expiresIn: 3600, // 1 hour
       });
     } catch (error: any) {
-      console.error('Error generating signed URL:', error);
+      this.logger.error(
+        'Error generating signed URL:',
+        error?.message || error,
+      );
       throw new Error('Failed to generate signed URL');
     }
   }

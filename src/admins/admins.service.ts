@@ -4,6 +4,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -12,6 +13,8 @@ import { FileUploadService } from '../common/services/file-upload.service';
 
 @Injectable()
 export class AdminsService {
+  private readonly logger = new Logger(AdminsService.name);
+
   constructor(
     @InjectRepository(Admin)
     private adminsRepository: Repository<Admin>,
@@ -169,7 +172,7 @@ export class AdminsService {
         'admin.updated_at',
       ]);
 
-    console.log('🔍 Admin search filters:', { filters, currentAdminRole });
+    this.logger.log('Admin search filters', { filters, currentAdminRole });
 
     // Role-based visibility rules
     if (currentAdminRole === AdminRole.ADMIN) {
@@ -186,7 +189,7 @@ export class AdminsService {
     // Apply search filter - more comprehensive search
     if (filters.search && filters.search.trim()) {
       const searchTerm = `%${filters.search.trim().toLowerCase()}%`;
-      console.log('🔍 Searching with term:', searchTerm);
+      this.logger.log('Searching with term', { searchTerm });
       queryBuilder.andWhere(
         '(LOWER(admin.email) LIKE :search OR LOWER(admin.first_name) LIKE :search OR admin.phone LIKE :search OR LOWER(admin.address) LIKE :search)',
         { search: searchTerm },
@@ -295,12 +298,16 @@ export class AdminsService {
     }
 
     // Only allow updating certain fields for profile
-    const allowedFields = ['first_name', 'phone', 'address'];
+    const allowedFields: Array<keyof UpdateAdminDto> = [
+      'first_name',
+      'phone',
+      'address',
+    ];
     const updateData: Partial<Admin> = {};
 
     allowedFields.forEach((field) => {
       if (updateAdminDto[field] !== undefined) {
-        updateData[field] = updateAdminDto[field];
+        (updateData as Record<string, unknown>)[field] = updateAdminDto[field];
       }
     });
 
@@ -308,6 +315,7 @@ export class AdminsService {
     await this.adminsRepository.save(admin);
 
     // Return admin without sensitive information
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password_hash, ...result } = admin;
     return result as Admin;
   }
@@ -333,8 +341,9 @@ export class AdminsService {
       await this.adminsRepository.save(admin);
 
       return { avatar_url: uploadResult.url };
-    } catch (error: any) {
-      throw new Error(`Failed to upload avatar: ${error.message}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to upload avatar: ${message}`);
     }
   }
 }

@@ -18,15 +18,19 @@ import {
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { SpecialsService } from './specials.service';
 import { CreateSpecialDto } from './dto/create-special.dto';
+import { AuthenticatedRequest } from '../common/types/authenticated-request.interface';
 import { UpdateSpecialDto } from './dto/update-special.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AdminRole } from '../admins/entities/admin.entity';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Controller('specials')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class SpecialsController {
+  private readonly logger = new LoggerService(SpecialsController.name);
+
   constructor(private readonly specialsService: SpecialsService) {}
 
   @Post()
@@ -34,24 +38,21 @@ export class SpecialsController {
   @UseInterceptors(FilesInterceptor('images', 5)) // Support up to 5 images
   async create(
     @Body() createSpecialDto: CreateSpecialDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @UploadedFiles() images?: Express.Multer.File[],
   ) {
     try {
-      console.log('🔄 Specials Controller - Create request:', createSpecialDto);
-      console.log(
-        '🔄 Specials Controller - Images count:',
-        images?.length || 0,
-      );
+      this.logger.log(`🔄 Create request: ${JSON.stringify(createSpecialDto)}`);
+      this.logger.log(`🔄 Images count: ${images?.length || 0}`);
       const result = await this.specialsService.create(
         createSpecialDto,
         req.user.id,
         images,
       );
-      console.log('✅ Specials Controller - Create successful');
+      this.logger.log('✅ Create successful');
       return result;
     } catch (error: any) {
-      console.error('❌ Specials Controller - Create error:', error);
+      this.logger.error('❌ Create error:', error?.message || error);
       throw error;
     }
   }
@@ -79,18 +80,14 @@ export class SpecialsController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateSpecialDto: UpdateSpecialDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @UploadedFiles() images?: Express.Multer.File[],
   ) {
     try {
-      console.log('🔄 Specials Controller - Update request:', {
-        id,
-        updateSpecialDto,
-      });
-      console.log(
-        '🔄 Specials Controller - Images count:',
-        images?.length || 0,
+      this.logger.log(
+        `🔄 Update request: ${JSON.stringify({ id, updateSpecialDto })}`,
       );
+      this.logger.log(`🔄 Images count: ${images?.length || 0}`);
 
       // Parse removeImages and existingImages arrays from FormData if they exist
       const processedDto = { ...updateSpecialDto };
@@ -120,16 +117,14 @@ export class SpecialsController {
         // Add the parsed arrays to the DTO
         if (removeImagesArray.length > 0) {
           (processedDto as any).removeImages = removeImagesArray;
-          console.log(
-            '🔄 Specials Controller - Parsed removeImages:',
-            removeImagesArray,
+          this.logger.log(
+            `🔄 Parsed removeImages: ${JSON.stringify(removeImagesArray)}`,
           );
         }
         if (existingImagesArray.length > 0) {
           (processedDto as any).existingImages = existingImagesArray;
-          console.log(
-            '🔄 Specials Controller - Parsed existingImages:',
-            existingImagesArray,
+          this.logger.log(
+            `🔄 Parsed existingImages: ${JSON.stringify(existingImagesArray)}`,
           );
         }
       }
@@ -140,10 +135,10 @@ export class SpecialsController {
         req.user.id,
         images,
       );
-      console.log('✅ Specials Controller - Update successful');
+      this.logger.log('✅ Update successful');
       return result;
     } catch (error: any) {
-      console.error('❌ Specials Controller - Update error:', error);
+      this.logger.error('❌ Update error:', error?.message || error);
       throw error;
     }
   }
@@ -153,12 +148,12 @@ export class SpecialsController {
   @UseInterceptors(FileInterceptor('image'))
   async uploadImage(@UploadedFile() image: Express.Multer.File) {
     try {
-      console.log('🔄 Specials Controller - Image upload request');
+      this.logger.log('🔄 Image upload request');
       const imageUrl = await this.specialsService.uploadImage(image);
-      console.log('✅ Specials Controller - Image upload successful');
+      this.logger.log('✅ Image upload successful');
       return { imageUrl };
     } catch (error: any) {
-      console.error('❌ Specials Controller - Image upload error:', error);
+      this.logger.error('❌ Image upload error:', error?.message || error);
       throw error;
     }
   }
@@ -168,14 +163,14 @@ export class SpecialsController {
   @UseInterceptors(FilesInterceptor('images', 5))
   async uploadImages(@UploadedFiles() images: Express.Multer.File[]) {
     try {
-      console.log('🔄 Specials Controller - Multiple images upload request');
+      this.logger.log('🔄 Multiple images upload request');
       const imageUrls = await this.specialsService.uploadImages(images);
-      console.log('✅ Specials Controller - Multiple images upload successful');
+      this.logger.log('✅ Multiple images upload successful');
       return { imageUrls };
     } catch (error: any) {
-      console.error(
-        '❌ Specials Controller - Multiple images upload error:',
-        error,
+      this.logger.error(
+        '❌ Multiple images upload error:',
+        error?.message || error,
       );
       throw error;
     }
@@ -185,15 +180,12 @@ export class SpecialsController {
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
   async deleteImage(@Param('id') imageUrl: string) {
     try {
-      console.log(
-        '🔄 Specials Controller - Delete image request for:',
-        imageUrl,
-      );
+      this.logger.log(`🔄 Delete image request for: ${imageUrl}`);
       await this.specialsService.deleteFile(decodeURIComponent(imageUrl));
-      console.log('✅ Specials Controller - Delete image successful');
+      this.logger.log('✅ Delete image successful');
       return { message: 'Image deleted successfully' };
     } catch (error: any) {
-      console.error('❌ Specials Controller - Delete image error:', error);
+      this.logger.error('❌ Delete image error:', error?.message || error);
       throw error;
     }
   }
@@ -202,12 +194,12 @@ export class SpecialsController {
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     try {
-      console.log('🔄 Specials Controller - Delete request for ID:', id);
+      this.logger.log(`🔄 Delete request for ID: ${id}`);
       await this.specialsService.remove(id);
-      console.log('✅ Specials Controller - Delete successful');
+      this.logger.log('✅ Delete successful');
       return { message: 'Special deleted successfully' };
     } catch (error: any) {
-      console.error('❌ Specials Controller - Delete error:', error);
+      this.logger.error('❌ Delete error:', error?.message || error);
       throw error;
     }
   }

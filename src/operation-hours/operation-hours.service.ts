@@ -5,9 +5,12 @@ import { OperationHour, DayOfWeek } from './entities/operation-hour.entity';
 import { CreateOperationHourDto } from './dto/create-operation-hour.dto';
 import { UpdateOperationHourDto } from './dto/update-operation-hour.dto';
 import { TimezoneService } from '../common/services/timezone.service';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Injectable()
 export class OperationHoursService {
+  private readonly logger = new LoggerService(OperationHoursService.name);
+
   constructor(
     @InjectRepository(OperationHour)
     private operationHoursRepository: Repository<OperationHour>,
@@ -142,17 +145,17 @@ export class OperationHoursService {
       })
       .toLowerCase() as DayOfWeek;
 
-    console.log('🕐 Current day name:', currentDayName);
+    this.logger.log(`🕐 Current day name: ${currentDayName}`);
 
     // Fetch today's operation hours directly from the database
     const todayHours = await this.operationHoursRepository.findOne({
       where: { day: currentDayName },
     });
 
-    console.log('🕐 Found today hours:', todayHours);
+    this.logger.log(`🕐 Found today hours: ${JSON.stringify(todayHours)}`);
 
     if (!todayHours) {
-      console.log('🕐 No operation hours found for today');
+      this.logger.log('🕐 No operation hours found for today');
       return {
         isOpen: false,
         todayHours: null,
@@ -163,7 +166,7 @@ export class OperationHoursService {
 
     // Use the status column directly from the database
     const isOpen = todayHours.status;
-    console.log('🕐 Status from database:', isOpen);
+    this.logger.log(`🕐 Status from database: ${isOpen}`);
 
     return {
       isOpen,

@@ -7,6 +7,7 @@ import { SpecialsService } from '../specials/specials.service';
 import { StoriesService } from '../stories/stories.service';
 import { FileUploadService } from '../common/services/file-upload.service';
 import { TimezoneService } from '../common/services/timezone.service';
+import { LoggerService } from '../common/logger/logger.service';
 
 export interface LandingPageContent {
   categories: any[];
@@ -31,6 +32,8 @@ export interface LandingPageContent {
 
 @Injectable()
 export class PublicApiService {
+  private readonly logger = new LoggerService(PublicApiService.name);
+
   constructor(
     private readonly categoriesService: CategoriesService,
     private readonly itemsService: ItemsService,
@@ -44,26 +47,36 @@ export class PublicApiService {
 
   // Helper method to generate signed URLs for images
   private async getSignedImagesUrls(images: string[]): Promise<string[]> {
-    console.log('getSignedImagesUrls called with:', images);
-    console.log('Type of images parameter:', typeof images);
-    console.log('Is images an array?:', Array.isArray(images));
-    
+    this.logger.log(
+      `getSignedImagesUrls called with: ${JSON.stringify(images)}`,
+    );
+    this.logger.log(`Type of images parameter: ${typeof images}`);
+    this.logger.log(`Is images an array?: ${Array.isArray(images)}`);
+
     if (!images || images.length === 0) {
-      console.log('No images provided or empty array, returning empty array');
+      this.logger.log(
+        'No images provided or empty array, returning empty array',
+      );
       return [];
     }
 
     try {
-      console.log('Calling fileUploadService.getMultipleSignedUrls with:', images);
+      this.logger.log(
+        `Calling fileUploadService.getMultipleSignedUrls with: ${JSON.stringify(images)}`,
+      );
       const result = await this.fileUploadService.getMultipleSignedUrls(images);
-      console.log('getMultipleSignedUrls returned:', result);
+      this.logger.log(
+        `getMultipleSignedUrls returned: ${JSON.stringify(result)}`,
+      );
       return result;
     } catch (error: any) {
-      console.error('Error in getSignedImagesUrls:', error);
-      console.error('Error stack:', error.stack);
-      console.warn(
-        'Failed to generate signed URLs, returning original URLs:',
-        error,
+      this.logger.error(
+        'Error in getSignedImagesUrls:',
+        error?.message || error,
+      );
+      this.logger.error('Error stack:', error?.stack);
+      this.logger.log(
+        `Failed to generate signed URLs, returning original URLs: ${error?.message || error}`,
       );
       return images; // Fallback to original URLs
     }
@@ -168,7 +181,10 @@ export class PublicApiService {
         },
       };
     } catch (error: any) {
-      console.error('Error fetching landing page content:', error);
+      this.logger.error(
+        'Error fetching landing page content:',
+        error?.message || error,
+      );
       throw new Error('Failed to fetch landing page content');
     }
   }
@@ -217,7 +233,7 @@ export class PublicApiService {
         totalItems: itemsResponse.total,
       };
     } catch (error: any) {
-      console.error('Error fetching menu data:', error);
+      this.logger.error('Error fetching menu data:', error?.message || error);
       throw new Error('Failed to fetch menu data');
     }
   }
@@ -233,7 +249,7 @@ export class PublicApiService {
           const dateObj = date instanceof Date ? date : new Date(date);
           return this.timezoneService.formatInEastern(dateObj, 'MMM dd, yyyy');
         } catch (error: any) {
-          console.warn('Error formatting date:', error);
+          this.logger.log(`Error formatting date: ${error?.message || error}`);
           return '';
         }
       };
@@ -311,7 +327,7 @@ export class PublicApiService {
         total: eventsResponse.total,
       };
     } catch (error: any) {
-      console.error('Error fetching events data:', error);
+      this.logger.error('Error fetching events data:', error?.message || error);
       throw new Error('Failed to fetch events data');
     }
   }
@@ -344,7 +360,10 @@ export class PublicApiService {
         },
       };
     } catch (error: any) {
-      console.error('Error fetching contact info:', error);
+      this.logger.error(
+        'Error fetching contact info:',
+        error?.message || error,
+      );
       throw new Error('Failed to fetch contact info');
     }
   }
@@ -357,7 +376,10 @@ export class PublicApiService {
         total: specialsResponse.total,
       };
     } catch (error: any) {
-      console.error('Error fetching specials data:', error);
+      this.logger.error(
+        'Error fetching specials data:',
+        error?.message || error,
+      );
       throw new Error('Failed to fetch specials data');
     }
   }
@@ -368,7 +390,7 @@ export class PublicApiService {
         weekday: 'long',
       });
 
-      console.log('🔍 Current day name:', currentDayName);
+      this.logger.log(`🔍 Current day name: ${currentDayName}`);
 
       const specialsResponse = await this.specialsService.findAll(
         1,
@@ -377,14 +399,17 @@ export class PublicApiService {
         'daily',
       );
 
-      console.log('🔍 All daily specials found:', specialsResponse.data.length);
-      console.log(
-        '🔍 Daily specials details:',
-        specialsResponse.data.map((s) => ({
-          id: s.id,
-          day_name: s.specialsDay?.day_name,
-          special_type: s.special_type,
-        })),
+      this.logger.log(
+        `🔍 All daily specials found: ${specialsResponse.data.length}`,
+      );
+      this.logger.log(
+        `🔍 Daily specials details: ${JSON.stringify(
+          specialsResponse.data.map((s) => ({
+            id: s.id,
+            day_name: s.specialsDay?.day_name,
+            special_type: s.special_type,
+          })),
+        )}`,
       );
 
       // Filter daily specials for current day - make comparison case-insensitive
@@ -396,7 +421,7 @@ export class PublicApiService {
         return specialDayName.toLowerCase() === currentDayName.toLowerCase();
       });
 
-      console.log('🔍 Today specials filtered:', todaySpecials.length);
+      this.logger.log(`🔍 Today specials filtered: ${todaySpecials.length}`);
 
       // Generate signed URLs for specials images
       const todaySpecialsWithSignedUrls = await Promise.all(
@@ -422,7 +447,10 @@ export class PublicApiService {
         total: todaySpecialsWithSignedUrls.length,
       };
     } catch (error: any) {
-      console.error('Error fetching daily specials:', error);
+      this.logger.error(
+        'Error fetching daily specials:',
+        error?.message || error,
+      );
       throw new Error('Failed to fetch daily specials');
     }
   }
@@ -475,7 +503,10 @@ export class PublicApiService {
         total: seasonalSpecialsWithSignedUrls.length,
       };
     } catch (error: any) {
-      console.error('Error fetching seasonal specials:', error);
+      this.logger.error(
+        'Error fetching seasonal specials:',
+        error?.message || error,
+      );
       throw new Error('Failed to fetch seasonal specials');
     }
   }
@@ -513,7 +544,10 @@ export class PublicApiService {
         total: lateNightSpecialsWithSignedUrls.length,
       };
     } catch (error: any) {
-      console.error('Error fetching latenight specials:', error);
+      this.logger.error(
+        'Error fetching latenight specials:',
+        error?.message || error,
+      );
       throw new Error('Failed to fetch latenight specials');
     }
   }
@@ -550,30 +584,36 @@ export class PublicApiService {
         total: storiesResponse.total,
       };
     } catch (error: any) {
-      console.error('Error fetching stories:', error);
+      this.logger.error('Error fetching stories:', error?.message || error);
       throw new Error('Failed to fetch stories');
     }
   }
 
   async getStoryById(id: string): Promise<any> {
     try {
-      console.log('Getting story by ID:', id);
-      
+      this.logger.log(`Getting story by ID: ${id}`);
+
       // Get the story by ID
       const story = await this.storiesService.findOne(id);
-      console.log('Found story:', story);
+      this.logger.log(`Found story: ${JSON.stringify(story)}`);
 
       if (!story) {
         throw new Error('Story not found');
       }
 
-      console.log('Story images before processing:', story.images);
-      console.log('Type of story.images:', typeof story.images);
-      console.log('Story.images array check:', Array.isArray(story.images));
+      this.logger.log(
+        `Story images before processing: ${JSON.stringify(story.images)}`,
+      );
+      this.logger.log(`Type of story.images: ${typeof story.images}`);
+      this.logger.log(
+        `Story.images array check: ${Array.isArray(story.images)}`,
+      );
 
       // Generate signed URLs for story images
       const signedImages = await this.getSignedImagesUrls(story.images || []);
-      console.log('Signed images generated:', signedImages);
+      this.logger.log(
+        `Signed images generated: ${JSON.stringify(signedImages)}`,
+      );
 
       return {
         id: story.id,
@@ -587,8 +627,8 @@ export class PublicApiService {
         updated_at: story.updated_at,
       };
     } catch (error: any) {
-      console.error('Error fetching story:', error);
-      console.error('Error stack:', error.stack);
+      this.logger.error('Error fetching story:', error?.message || error);
+      this.logger.error('Error stack:', error?.stack);
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
       throw new Error(`Failed to fetch story: ${errorMessage}`);
@@ -619,7 +659,10 @@ export class PublicApiService {
         total: operationHoursResponse.total,
       };
     } catch (error: any) {
-      console.error('Error fetching operation hours:', error);
+      this.logger.error(
+        'Error fetching operation hours:',
+        error?.message || error,
+      );
       throw new Error('Failed to fetch operation hours');
     }
   }
@@ -628,8 +671,11 @@ export class PublicApiService {
     try {
       // Use the timezone-aware operation status service
       return await this.operationHoursService.getCurrentOperationStatus();
-    } catch (error) {
-      console.error("Error fetching today's operation status:", error);
+    } catch (error: any) {
+      this.logger.error(
+        "Error fetching today's operation status:",
+        error?.message || error,
+      );
       throw new Error("Failed to fetch today's operation status");
     }
   }

@@ -17,6 +17,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AdminRole } from '../admins/entities/admin.entity';
+import { AuthenticatedRequest } from '../common/types/authenticated-request.interface';
 
 @Controller('tasks')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -25,7 +26,10 @@ export class TasksController {
 
   @Post()
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  create(@Body() createTaskDto: CreateTaskDto, @Request() req) {
+  create(
+    @Body() createTaskDto: CreateTaskDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     return this.tasksService.create(createTaskDto, req.user?.id);
   }
 
@@ -73,14 +77,17 @@ export class TasksController {
   update(
     @Param('id') id: string,
     @Body() updateTaskDto: UpdateTaskDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.tasksService.update(id, updateTaskDto, req.user?.id);
   }
 
   @Patch(':id/toggle')
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  toggleComplete(@Param('id') id: string, @Request() req) {
+  toggleComplete(
+    @Param('id') id: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
     return this.tasksService.toggleComplete(id, req.user?.id);
   }
 

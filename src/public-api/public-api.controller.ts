@@ -1,8 +1,11 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { PublicApiService } from './public-api.service';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Controller('api/public')
 export class PublicApiController {
+  private readonly logger = new LoggerService(PublicApiController.name);
+
   constructor(private readonly publicApiService: PublicApiService) {}
 
   @Get('landing-content')
@@ -52,21 +55,21 @@ export class PublicApiController {
 
   @Get('stories/:id')
   async getStoryById(@Param('id') id: string) {
-    console.error('🔍 CONTROLLER METHOD CALLED - Story ID:', id);
-    console.error('🔍 Request received at:', new Date().toISOString());
+    this.logger.log(`🔍 Getting story by ID: ${id}`);
+    this.logger.log(`🔍 Request received at: ${new Date().toISOString()}`);
     try {
       const result = await this.publicApiService.getStoryById(id);
-      console.error('🔍 Service call successful');
+      this.logger.log('🔍 Service call successful');
       return result;
-    } catch (error) {
-      console.error('🔍 Service call failed:', error);
+    } catch (error: any) {
+      this.logger.error('🔍 Service call failed:', error?.message || error);
       throw error;
     }
   }
 
   @Get('operation-hours')
   async getOperationHours() {
-    console.error('🔥 OPERATION HOURS DEBUG TEST - This should appear in logs');
+    this.logger.log('🔥 OPERATION HOURS - Fetching operation hours');
     return this.publicApiService.getOperationHours();
   }
 

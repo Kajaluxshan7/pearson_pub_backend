@@ -18,11 +18,15 @@ import { ReorderCategoriesDto } from './dto/reorder-categories.dto';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Roles } from '../../auth/decorators/roles.decorator';
+import { AuthenticatedRequest } from '../../common/types/authenticated-request.interface';
 import { AdminRole } from '../../admins/entities/admin.entity';
+import { LoggerService } from '../../common/logger/logger.service';
 
 @Controller('categories')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class CategoriesController {
+  private readonly logger = new LoggerService(CategoriesController.name);
+
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Get('count')
@@ -33,7 +37,10 @@ export class CategoriesController {
 
   @Post()
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  create(@Body() createCategoryDto: CreateCategoryDto, @Request() req) {
+  create(
+    @Body() createCategoryDto: CreateCategoryDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     return this.categoriesService.create(createCategoryDto, req.user.id);
   }
   @Get()
@@ -59,7 +66,7 @@ export class CategoriesController {
   update(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.categoriesService.update(id, updateCategoryDto, req.user.id);
   }
@@ -68,12 +75,12 @@ export class CategoriesController {
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
   async remove(@Param('id') id: string) {
     try {
-      console.log('🔄 Categories Controller - Delete request for ID:', id);
+      this.logger.log(`🔄 Delete request for ID: ${id}`);
       await this.categoriesService.remove(id);
-      console.log('✅ Categories Controller - Delete successful');
+      this.logger.log('✅ Delete successful');
       return { message: 'Category deleted successfully' };
     } catch (error: any) {
-      console.error('❌ Categories Controller - Delete error:', error);
+      this.logger.error('❌ Delete error:', error?.message || error);
       throw error;
     }
   }

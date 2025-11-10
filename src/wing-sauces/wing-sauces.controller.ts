@@ -18,29 +18,38 @@ import { UpdateWingSauceDto } from './dto/update-wing-sauce.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { AuthenticatedRequest } from '../common/types/authenticated-request.interface';
 import { AdminRole } from '../admins/entities/admin.entity';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Controller('wing-sauces')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class WingSaucesController {
+  private readonly logger = new LoggerService(WingSaucesController.name);
+
   constructor(private readonly wingSaucesService: WingSaucesService) {}
 
   @Post()
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  async create(@Body() createWingSauceDto: CreateWingSauceDto, @Request() req) {
+  async create(
+    @Body() createWingSauceDto: CreateWingSauceDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     try {
-      console.log(
-        '🔄 WingSauces Controller - Create request:',
-        createWingSauceDto,
+      this.logger.log(
+        `🔄 WingSauces Controller - Create request: ${JSON.stringify(createWingSauceDto)}`,
       );
       const result = await this.wingSaucesService.create(
         createWingSauceDto,
         req.user.id,
       );
-      console.log('✅ WingSauces Controller - Create successful');
+      this.logger.log('✅ WingSauces Controller - Create successful');
       return result;
     } catch (error: any) {
-      console.error('❌ WingSauces Controller - Create error:', error);
+      this.logger.error(
+        '❌ WingSauces Controller - Create error:',
+        error?.message || error,
+      );
       throw error;
     }
   }
@@ -66,22 +75,24 @@ export class WingSaucesController {
   async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateWingSauceDto: UpdateWingSauceDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     try {
-      console.log('🔄 WingSauces Controller - Update request:', {
-        id,
-        updateWingSauceDto,
-      });
+      this.logger.log(
+        `🔄 WingSauces Controller - Update request: ${JSON.stringify({ id, updateWingSauceDto })}`,
+      );
       const result = await this.wingSaucesService.update(
         id,
         updateWingSauceDto,
         req.user.id,
       );
-      console.log('✅ WingSauces Controller - Update successful');
+      this.logger.log('✅ WingSauces Controller - Update successful');
       return result;
     } catch (error: any) {
-      console.error('❌ WingSauces Controller - Update error:', error);
+      this.logger.error(
+        '❌ WingSauces Controller - Update error:',
+        error?.message || error,
+      );
       throw error;
     }
   }
@@ -90,12 +101,17 @@ export class WingSaucesController {
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
   async remove(@Param('id', ParseUUIDPipe) id: string) {
     try {
-      console.log('🔄 WingSauces Controller - Delete request for ID:', id);
+      this.logger.log(
+        `🔄 WingSauces Controller - Delete request for ID: ${id}`,
+      );
       await this.wingSaucesService.remove(id);
-      console.log('✅ WingSauces Controller - Delete successful');
+      this.logger.log('✅ WingSauces Controller - Delete successful');
       return { message: 'Wing sauce deleted successfully' };
     } catch (error: any) {
-      console.error('❌ WingSauces Controller - Delete error:', error);
+      this.logger.error(
+        '❌ WingSauces Controller - Delete error:',
+        error?.message || error,
+      );
       throw error;
     }
   }

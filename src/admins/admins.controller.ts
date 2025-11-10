@@ -11,6 +11,7 @@ import {
   Query,
   UseInterceptors,
   UploadedFile,
+  Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AdminsService } from './admins.service';
@@ -20,10 +21,13 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AdminRole } from './entities/admin.entity';
+import { AuthenticatedRequest } from '../common/types/authenticated-request.interface';
 
 @Controller('admins')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class AdminsController {
+  private readonly logger = new Logger(AdminsController.name);
+
   constructor(private readonly adminsService: AdminsService) {}
 
   @Get('count')
@@ -40,14 +44,14 @@ export class AdminsController {
 
   @Get()
   @Roles(AdminRole.SUPERADMIN, AdminRole.ADMIN)
-  findAll(@Request() req) {
+  findAll(@Request() req: AuthenticatedRequest) {
     return this.adminsService.findAll(req.user.role);
   }
 
   @Get('filtered')
   @Roles(AdminRole.SUPERADMIN, AdminRole.ADMIN)
   getAllWithFilters(
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
     @Query('page') page: string = '1',
     @Query('limit') limit: string = '10',
     @Query('search') search?: string,
@@ -69,7 +73,10 @@ export class AdminsController {
 
   @Patch('profile')
   @Roles(AdminRole.SUPERADMIN, AdminRole.ADMIN)
-  updateProfile(@Body() updateAdminDto: UpdateAdminDto, @Request() req) {
+  updateProfile(
+    @Body() updateAdminDto: UpdateAdminDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     return this.adminsService.updateProfile(req.user.id, updateAdminDto);
   }
 
@@ -78,7 +85,7 @@ export class AdminsController {
   @UseInterceptors(FileInterceptor('avatar'))
   async uploadAvatar(
     @UploadedFile() file: Express.Multer.File,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.adminsService.uploadAvatar(req.user.id, file);
   }
@@ -94,7 +101,7 @@ export class AdminsController {
   update(
     @Param('id') id: string,
     @Body() updateAdminDto: UpdateAdminDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.adminsService.update(
       id,
@@ -106,21 +113,24 @@ export class AdminsController {
 
   @Delete(':id')
   @Roles(AdminRole.SUPERADMIN)
-  async remove(@Param('id') id: string, @Request() req) {
+  async remove(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     try {
-      console.log('🔄 Admins Controller - Delete request for ID:', id);
+      this.logger.log(`Delete request for admin ID: ${id}`);
       await this.adminsService.remove(id, req.user.role);
-      console.log('✅ Admins Controller - Delete successful');
+      this.logger.log(`Admin deleted successfully: ${id}`);
       return { message: 'Admin deleted successfully' };
-    } catch (error: any) {
-      console.error('❌ Admins Controller - Delete error:', error);
+    } catch (error) {
+      this.logger.error(
+        `Delete error for admin ID ${id}:`,
+        error instanceof Error ? error.stack : error,
+      );
       throw error;
     }
   }
 
   @Patch(':id/toggle-status')
   @Roles(AdminRole.SUPERADMIN)
-  toggleStatus(@Param('id') id: string, @Request() req) {
+  toggleStatus(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     return this.adminsService.toggleStatus(id, req.user.id, req.user.role);
   }
 }

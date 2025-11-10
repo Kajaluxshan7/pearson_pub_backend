@@ -43,6 +43,7 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.2.1",
     "@nestjs/typeorm": "^11.0.0",
     "@types/cookie-parser": "^1.4.9",
     "@types/moment-timezone": "^0.5.30",
@@ -58,6 +59,7 @@
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
     "handlebars": "^4.7.8",
+    "joi": "^18.0.1",
     "moment-timezone": "^0.6.0",
     "multer": "^2.0.1",
     "nodemailer": "^7.0.3",
@@ -68,8 +70,11 @@
     "pg": "^8.16.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
+    "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.24",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "winston": "^3.18.3",
+    "winston-daily-rotate-file": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

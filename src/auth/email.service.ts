@@ -4,9 +4,11 @@ import * as nodemailer from 'nodemailer';
 import * as fs from 'fs';
 import * as path from 'path';
 import { AdminRole } from '../admins/entities/admin.entity';
+import { LoggerService } from '../common/logger/logger.service';
 
 @Injectable()
 export class EmailService {
+  private readonly logger = new LoggerService(EmailService.name);
   private transporter: nodemailer.Transporter;
   constructor(private configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
@@ -64,7 +66,10 @@ export class EmailService {
     try {
       await this.transporter.sendMail(mailOptions);
     } catch (error: any) {
-      console.error('Error sending verification email:', error);
+      this.logger.error(
+        'Error sending verification email:',
+        error?.message || error,
+      );
       throw new Error('Failed to send verification email');
     }
   }
@@ -150,7 +155,10 @@ export class EmailService {
     try {
       await this.transporter.sendMail(mailOptions);
     } catch (error: any) {
-      console.error('Error sending admin invitation email:', error);
+      this.logger.error(
+        'Error sending admin invitation email:',
+        error?.message || error,
+      );
       throw new Error('Failed to send admin invitation email');
     }
   }

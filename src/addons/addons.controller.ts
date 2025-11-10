@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   Request,
+  Logger,
 } from '@nestjs/common';
 import { AddonsService } from './addons.service';
 import { CreateAddonDto } from './dto/create-addon.dto';
@@ -17,10 +18,13 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AdminRole } from '../admins/entities/admin.entity';
+import { AuthenticatedRequest } from '../common/types/authenticated-request.interface';
 
 @Controller('addons')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class AddonsController {
+  private readonly logger = new Logger(AddonsController.name);
+
   constructor(private readonly addonsService: AddonsService) {}
 
   @Get('count')
@@ -31,17 +35,25 @@ export class AddonsController {
 
   @Post()
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  async create(@Body() createAddonDto: CreateAddonDto, @Request() req) {
+  async create(
+    @Body() createAddonDto: CreateAddonDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
     try {
-      console.log('🔄 Addons Controller - Create request:', createAddonDto);
+      this.logger.log('Create addon request', {
+        addonName: createAddonDto.name,
+      });
       const result = await this.addonsService.create(
         createAddonDto,
         req.user.id,
       );
-      console.log('✅ Addons Controller - Create successful');
+      this.logger.log('Addon created successfully', { addonId: result.id });
       return result;
-    } catch (error: any) {
-      console.error('❌ Addons Controller - Create error:', error);
+    } catch (error) {
+      this.logger.error(
+        'Addon creation error',
+        error instanceof Error ? error.stack : error,
+      );
       throw error;
     }
   }
@@ -77,7 +89,7 @@ export class AddonsController {
   update(
     @Param('id') id: string,
     @Body() updateAddonDto: UpdateAddonDto,
-    @Request() req,
+    @Request() req: AuthenticatedRequest,
   ) {
     return this.addonsService.update(id, updateAddonDto, req.user.id);
   }
@@ -85,19 +97,22 @@ export class AddonsController {
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
   async remove(@Param('id') id: string) {
     try {
-      console.log('🔄 Addons Controller - Delete request for ID:', id);
+      this.logger.log(`Delete addon request for ID: ${id}`);
       await this.addonsService.remove(id);
-      console.log('✅ Addons Controller - Delete successful');
+      this.logger.log(`Addon deleted successfully: ${id}`);
       return { message: 'Addon deleted successfully' };
-    } catch (error: any) {
-      console.error('❌ Addons Controller - Delete error:', error);
+    } catch (error) {
+      this.logger.error(
+        `Delete error for addon ID ${id}:`,
+        error instanceof Error ? error.stack : error,
+      );
       throw error;
     }
   }
 
   @Post(':id/duplicate')
   @Roles(AdminRole.ADMIN, AdminRole.SUPERADMIN)
-  duplicate(@Param('id') id: string, @Request() req) {
+  duplicate(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     return this.addonsService.duplicate(id, req.user.id);
   }
 }
