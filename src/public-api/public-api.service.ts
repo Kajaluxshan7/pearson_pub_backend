@@ -444,31 +444,20 @@ export class PublicApiService {
 
   async getSeasonalSpecials() {
     try {
-      // Use findAllByType to get ALL seasonal specials without display_start_time/display_end_time filtering
-      // Seasonal specials are filtered by their own seasonal_start_datetime/seasonal_end_datetime below
-      const specialsResponse = await this.specialsService.findAllByType(
+      // Use findAllVisible to respect display_start_time/display_end_time window
+      // This controls when the special appears on the site
+      // The seasonal_start_datetime/seasonal_end_datetime are sent to the frontend
+      // for showing "Available" / "Coming Soon" badges - not for hiding the special
+      const specialsResponse = await this.specialsService.findAllVisible(
+        1,
+        50,
+        undefined,
         'seasonal',
-      );
-
-      // Filter seasonal specials that are currently active
-      const nowUtc = new Date();
-      const activeSeasonalSpecials = specialsResponse.data.filter(
-        (special: any) => {
-          if (
-            !special.seasonal_start_datetime ||
-            !special.seasonal_end_datetime
-          ) {
-            return false;
-          }
-          const startDate = new Date(special.seasonal_start_datetime);
-          const endDate = new Date(special.seasonal_end_datetime);
-          return nowUtc >= startDate && nowUtc <= endDate;
-        },
       );
 
       // Generate signed URLs for seasonal specials images
       const seasonalSpecialsWithSignedUrls = await Promise.all(
-        activeSeasonalSpecials.map(async (special: any) => {
+        specialsResponse.data.map(async (special: any) => {
           const signedImages = await this.getSignedImagesUrls(
             special.image_urls || [],
           );
