@@ -137,7 +137,8 @@ export class OperationHoursService {
     status: string;
     nextChange: string | null;
   }> {
-    const now = this.timezoneService.getCurrentEasternTime();
+    // Use real Date and let toLocaleDateString handle timezone conversion
+    const now = new Date();
     const currentDayName = now
       .toLocaleDateString('en-US', {
         weekday: 'long',

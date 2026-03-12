@@ -141,13 +141,13 @@ export class EventsService {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
 
-    // Generate signed URLs for images
+    // Generate signed URLs for images — return a copy, don't mutate the tracked entity
     if (event.images && event.images.length > 0) {
       try {
         const signedUrls = await this.fileUploadService.getMultipleSignedUrls(
           event.images,
         );
-        event.images = signedUrls;
+        return { ...event, images: signedUrls } as Event;
       } catch (error: any) {
         this.logger.log(
           `Failed to generate signed URLs for event ${event.id}: ${error?.message || error}`,
@@ -158,19 +158,42 @@ export class EventsService {
     return event;
   }
 
+  /**
+   * Find an event by ID without applying signed URLs to images.
+   * Used internally for update/delete where we need original S3 keys.
+   */
+  private async findOneRaw(id: string): Promise<Event> {
+    const event = await this.eventsRepository.findOne({
+      where: { id },
+      relations: ['lastEditedByAdmin'],
+    });
+
+    if (!event) {
+      throw new NotFoundException(`Event with ID ${id} not found`);
+    }
+
+    return event;
+  }
+
   async update(
     id: string,
     updateEventDto: UpdateEventDto,
     adminId: string,
   ): Promise<Event> {
-    const event = await this.findOne(id);
+    const event = await this.findOneRaw(id);
 
-    // Handle datetime strings that may already be in UTC format if provided
-    const updateData: Partial<Event> = {
-      name: updateEventDto.name,
-      description: updateEventDto.description,
-      images: updateEventDto.images,
-    };
+    // Only include fields that are actually provided (not undefined)
+    const updateData: Partial<Event> = {};
+
+    if (updateEventDto.name !== undefined) {
+      updateData.name = updateEventDto.name;
+    }
+    if (updateEventDto.description !== undefined) {
+      updateData.description = updateEventDto.description;
+    }
+    if (updateEventDto.images !== undefined) {
+      updateData.images = updateEventDto.images;
+    }
 
     // Handle date fields with proper timezone conversion
     if (updateEventDto.start_date) {
@@ -191,7 +214,7 @@ export class EventsService {
   }
 
   async remove(id: string): Promise<void> {
-    const event = await this.findOne(id);
+    const event = await this.findOneRaw(id);
 
     // Clean up images from S3 before deleting the event
     if (event.images && event.images.length > 0) {

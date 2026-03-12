@@ -105,7 +105,7 @@ export class PublicApiService {
         ), // Featured & visible items
         this.itemsService.findAll(1, 10000, undefined, undefined, true, true), // All available & visible items
         this.eventsService.findAll(1, 100), // Fetch more events
-        this.specialsService.findAll(1, 100), // Today's specials
+        this.specialsService.findAllVisible(1, 100), // Today's specials (filtered by display window)
         this.operationHoursService.findAll(1, 10), // Operation hours
       ]);
 
@@ -255,19 +255,15 @@ export class PublicApiService {
       };
 
       // Helper function to calculate event status
+      // Compare in UTC since dates are stored as UTC - no need to convert both sides
       const calculateEventStatus = (
         startDate: Date | string,
         endDate: Date | string,
       ): string => {
-        const now = this.timezoneService.getCurrentEasternTime();
+        const now = new Date();
         const start =
-          startDate instanceof Date
-            ? this.timezoneService.convertUtcToEastern(startDate)
-            : this.timezoneService.convertUtcToEastern(new Date(startDate));
-        const end =
-          endDate instanceof Date
-            ? this.timezoneService.convertUtcToEastern(endDate)
-            : this.timezoneService.convertUtcToEastern(new Date(endDate));
+          startDate instanceof Date ? startDate : new Date(startDate);
+        const end = endDate instanceof Date ? endDate : new Date(endDate);
 
         if (now < start) return 'upcoming';
         if (now >= start && now <= end) return 'current';
@@ -370,7 +366,7 @@ export class PublicApiService {
 
   async getSpecialsData() {
     try {
-      const specialsResponse = await this.specialsService.findAll(1, 50);
+      const specialsResponse = await this.specialsService.findAllVisible(1, 50);
       return {
         specials: specialsResponse.data,
         total: specialsResponse.total,
@@ -388,11 +384,12 @@ export class PublicApiService {
     try {
       const currentDayName = new Date().toLocaleDateString('en-US', {
         weekday: 'long',
+        timeZone: 'America/Toronto',
       });
 
       this.logger.log(`🔍 Current day name: ${currentDayName}`);
 
-      const specialsResponse = await this.specialsService.findAll(
+      const specialsResponse = await this.specialsService.findAllVisible(
         1,
         50,
         undefined,
@@ -457,7 +454,7 @@ export class PublicApiService {
 
   async getSeasonalSpecials() {
     try {
-      const specialsResponse = await this.specialsService.findAll(
+      const specialsResponse = await this.specialsService.findAllVisible(
         1,
         50,
         undefined,
@@ -465,7 +462,8 @@ export class PublicApiService {
       );
 
       // Filter seasonal specials that are currently active and generate signed URLs
-      const currentDate = new Date();
+      // Use actual UTC time since seasonal_start_datetime/seasonal_end_datetime are stored as UTC
+      const nowUtc = new Date();
       const activeSeasonalSpecials = specialsResponse.data.filter(
         (special: any) => {
           if (
@@ -476,7 +474,7 @@ export class PublicApiService {
           }
           const startDate = new Date(special.seasonal_start_datetime);
           const endDate = new Date(special.seasonal_end_datetime);
-          return currentDate >= startDate && currentDate <= endDate;
+          return nowUtc >= startDate && nowUtc <= endDate;
         },
       );
 
@@ -513,7 +511,7 @@ export class PublicApiService {
 
   async getLateNightSpecials() {
     try {
-      const specialsResponse = await this.specialsService.findAll(
+      const specialsResponse = await this.specialsService.findAllVisible(
         1,
         50,
         undefined,

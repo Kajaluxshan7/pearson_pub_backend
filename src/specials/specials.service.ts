@@ -162,7 +162,12 @@ export class SpecialsService {
     search?: string,
     specialType?: string,
   ): Promise<{ data: Special[]; total: number }> {
-    const now = new Date();
+    // Use actual UTC time for comparison since display_start_time/display_end_time are stored as UTC
+    const nowUtc = new Date();
+    const nowISO = nowUtc.toISOString();
+
+    this.logger.log(`🔍 findAllVisible called - now (UTC): ${nowISO}, specialType: ${specialType}`);
+
     const query = this.specialsRepository
       .createQueryBuilder('special')
       .leftJoinAndSelect('special.specialsDay', 'specialsDay')
@@ -178,17 +183,21 @@ export class SpecialsService {
     }
 
     if (specialType) {
-      query.andWhere('special.special_type = :specialType', { specialType });
+      if (search) {
+        query.andWhere('special.special_type = :specialType', { specialType });
+      } else {
+        query.where('special.special_type = :specialType', { specialType });
+      }
     }
 
     // Filter by display times - only show specials within their display window
     query.andWhere(
       '(special.display_start_time IS NULL OR special.display_start_time <= :now)',
-      { now },
+      { now: nowISO },
     );
     query.andWhere(
       '(special.display_end_time IS NULL OR special.display_end_time >= :now)',
-      { now },
+      { now: nowISO },
     );
 
     query.orderBy('special.created_at', 'DESC');
@@ -197,6 +206,8 @@ export class SpecialsService {
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();
+
+    this.logger.log(`🔍 findAllVisible results - found: ${data.length}, total: ${total}`);
 
     return { data, total };
   }

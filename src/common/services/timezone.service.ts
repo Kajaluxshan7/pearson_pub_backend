@@ -338,12 +338,11 @@ export class TimezoneService {
     startDate: Date,
     endDate: Date,
   ): 'upcoming' | 'current' | 'ended' {
-    const now = this.getCurrentEasternTime();
-    const start = this.convertUtcToEastern(startDate);
-    const end = this.convertUtcToEastern(endDate);
+    // Compare in UTC directly since all dates are stored as UTC
+    const now = new Date();
 
-    if (now < start) return 'upcoming';
-    if (now >= start && now <= end) return 'current';
+    if (now < startDate) return 'upcoming';
+    if (now >= startDate && now <= endDate) return 'current';
     return 'ended';
   }
 
