@@ -212,6 +212,26 @@ export class SpecialsService {
     return { data, total };
   }
 
+  async findAllByType(
+    specialType: string,
+    page = 1,
+    limit = 50,
+  ): Promise<{ data: Special[]; total: number }> {
+    const query = this.specialsRepository
+      .createQueryBuilder('special')
+      .leftJoinAndSelect('special.specialsDay', 'specialsDay')
+      .leftJoinAndSelect('special.lastEditedByAdmin', 'admin')
+      .where('special.special_type = :specialType', { specialType })
+      .orderBy('special.created_at', 'DESC');
+
+    const [data, total] = await query
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    return { data, total };
+  }
+
   async findOne(id: string): Promise<Special> {
     const special = await this.specialsRepository.findOne({
       where: { id },

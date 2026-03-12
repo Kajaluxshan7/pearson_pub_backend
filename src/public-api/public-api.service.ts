@@ -511,10 +511,8 @@ export class PublicApiService {
 
   async getLateNightSpecials() {
     try {
-      const specialsResponse = await this.specialsService.findAllVisible(
-        1,
-        50,
-        undefined,
+      // Late night specials should always be visible (no display window filtering)
+      const specialsResponse = await this.specialsService.findAllByType(
         'latenight',
       );
 
