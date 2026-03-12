@@ -389,24 +389,14 @@ export class PublicApiService {
 
       this.logger.log(`🔍 Current day name: ${currentDayName}`);
 
-      const specialsResponse = await this.specialsService.findAllVisible(
-        1,
-        50,
-        undefined,
+      // Use findAllByType to get ALL daily specials without display_start_time/display_end_time filtering
+      // Daily specials should show all day on their assigned day
+      const specialsResponse = await this.specialsService.findAllByType(
         'daily',
       );
 
       this.logger.log(
         `🔍 All daily specials found: ${specialsResponse.data.length}`,
-      );
-      this.logger.log(
-        `🔍 Daily specials details: ${JSON.stringify(
-          specialsResponse.data.map((s) => ({
-            id: s.id,
-            day_name: s.specialsDay?.day_name,
-            special_type: s.special_type,
-          })),
-        )}`,
       );
 
       // Filter daily specials for current day - make comparison case-insensitive
@@ -454,15 +444,13 @@ export class PublicApiService {
 
   async getSeasonalSpecials() {
     try {
-      const specialsResponse = await this.specialsService.findAllVisible(
-        1,
-        50,
-        undefined,
+      // Use findAllByType to get ALL seasonal specials without display_start_time/display_end_time filtering
+      // Seasonal specials are filtered by their own seasonal_start_datetime/seasonal_end_datetime below
+      const specialsResponse = await this.specialsService.findAllByType(
         'seasonal',
       );
 
-      // Filter seasonal specials that are currently active and generate signed URLs
-      // Use actual UTC time since seasonal_start_datetime/seasonal_end_datetime are stored as UTC
+      // Filter seasonal specials that are currently active
       const nowUtc = new Date();
       const activeSeasonalSpecials = specialsResponse.data.filter(
         (special: any) => {
