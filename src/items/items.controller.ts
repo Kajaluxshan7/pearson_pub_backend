@@ -165,9 +165,9 @@ export class ItemsController {
 
       // Validate each file
       for (const file of files) {
-        // Check file size (1MB max)
-        if (file.size > 1024 * 1024) {
-          throw new Error(`File ${file.originalname} exceeds 1MB limit`);
+        // Check file size (5MB max)
+        if (file.size > 5 * 1024 * 1024) {
+          throw new Error(`File ${file.originalname} exceeds 5MB limit`);
         }
 
         // Check file type
@@ -215,9 +215,9 @@ export class ItemsController {
   @UseInterceptors(FileInterceptor('image'))
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
     try {
-      // Validate file size (1MB max)
-      if (file.size > 1024 * 1024) {
-        throw new Error('File size must not exceed 1MB');
+      // Validate file size (5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error('File size must not exceed 5MB');
       }
 
       // Validate file type

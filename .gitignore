@@ -3,6 +3,9 @@
 /node_modules
 /build
 
+# local file uploads (served as static assets, stored on VPS disk)
+/uploads
+
 # Logs
 logs
 *.log

@@ -33,7 +33,7 @@ export class StoriesService {
 
     let imageUrls: string[] = [];
     if (images && images.length > 0) {
-      // Validate each image is max 1MB (already handled in FileUploadService)
+      // Validate each image is max 5MB (enforced in FileUploadService)
       const uploadResults = await this.fileUploadService.uploadMultipleFiles(
         images,
         'stories',

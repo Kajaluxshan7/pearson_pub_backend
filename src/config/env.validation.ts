@@ -54,19 +54,15 @@ export const envValidationSchema = Joi.object({
     'any.required': 'FRONTEND_URL is required for email verification links',
   }),
 
-  // AWS Configuration (optional in development, required in production)
-  AWS_ACCESS_KEY_ID: Joi.string().when('NODE_ENV', {
-    is: 'production',
-    then: Joi.required(),
-    otherwise: Joi.optional(),
-  }),
-  AWS_SECRET_ACCESS_KEY: Joi.string().when('NODE_ENV', {
-    is: 'production',
-    then: Joi.required(),
-    otherwise: Joi.optional(),
-  }),
-  AWS_REGION: Joi.string().default('us-east-1'),
-  AWS_S3_BUCKET_NAME: Joi.string().default('pearson-pub-images'),
+  // Local storage configuration
+  APP_URL: Joi.string().uri().optional(),
+  UPLOAD_DIR: Joi.string().optional(),
+
+  // AWS Configuration (no longer used — kept optional for migration script only)
+  AWS_ACCESS_KEY_ID: Joi.string().optional(),
+  AWS_SECRET_ACCESS_KEY: Joi.string().optional(),
+  AWS_REGION: Joi.string().optional(),
+  AWS_S3_BUCKET_NAME: Joi.string().optional(),
 
   // Google OAuth Configuration
   GOOGLE_CLIENT_ID: Joi.string().required().messages({

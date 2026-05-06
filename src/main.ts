@@ -2,6 +2,9 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { json, urlencoded } from 'express';
+import * as express from 'express';
+import * as path from 'path';
+import * as fs from 'fs';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { LoggerService } from './common/logger/logger.service';
@@ -52,10 +55,10 @@ async function bootstrap() {
   }
 
   // Configure custom body parser with increased size limits
-  app.use(json({ limit: '2mb' }));
-  app.use(urlencoded({ limit: '2mb', extended: true }));
+  app.use(json({ limit: '10mb' }));
+  app.use(urlencoded({ limit: '10mb', extended: true }));
 
-  // Enable CORS with environment-based origins
+  // Enable CORS with environment-based origins (must be before static middleware)
   const corsOrigins = process.env.CORS_ORIGINS;
   if (!corsOrigins) {
     throw new Error(
@@ -69,6 +72,14 @@ async function bootstrap() {
   });
 
   logger.log('CORS enabled for origins: ' + corsOrigins, 'Bootstrap');
+
+  // Serve uploaded files as static assets (after CORS so headers are included)
+  const uploadDir = process.env.UPLOAD_DIR || path.join(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+  app.use('/uploads', express.static(uploadDir));
+  logger.log(`Serving static uploads from: ${uploadDir}`, 'Bootstrap');
 
   // Enable cookie parser
   app.use(cookieParser());
