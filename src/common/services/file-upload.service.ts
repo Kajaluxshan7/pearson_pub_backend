@@ -102,11 +102,29 @@ export class FileUploadService {
   }
 
   async getSignedUrl(fileUrl: string): Promise<string> {
-    // Local storage — no signing needed, return URL as-is
-    return fileUrl;
+    // Persisted URLs may contain an old host (including localhost).
+    return this.getPublicUrl(fileUrl);
   }
 
   async getMultipleSignedUrls(fileUrls: string[]): Promise<string[]> {
-    return fileUrls;
+    return fileUrls.map((fileUrl) => this.getPublicUrl(fileUrl));
+  }
+
+  getPublicUrl(fileUrl: string): string {
+    if (!fileUrl || fileUrl.startsWith('data:')) {
+      return fileUrl;
+    }
+
+    try {
+      const parsedUrl = new URL(fileUrl, this.appUrl);
+
+      if (parsedUrl.pathname.startsWith('/uploads/')) {
+        return `${this.appUrl}${parsedUrl.pathname}${parsedUrl.search}${parsedUrl.hash}`;
+      }
+    } catch {
+      // Preserve non-URL legacy values rather than breaking the response.
+    }
+
+    return fileUrl;
   }
 }

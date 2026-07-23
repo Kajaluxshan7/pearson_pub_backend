@@ -9,6 +9,8 @@ import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { LoggerService } from './common/logger/logger.service';
 import { LoggingInterceptor } from './common/logger/logging.interceptor';
+import { FileUploadService } from './common/services/file-upload.service';
+import { MediaUrlInterceptor } from './common/interceptors/media-url.interceptor';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 // Create logger instance for bootstrap errors
@@ -99,7 +101,10 @@ async function bootstrap() {
   );
 
   // Add global logging interceptor
-  app.useGlobalInterceptors(new LoggingInterceptor());
+  app.useGlobalInterceptors(
+    new LoggingInterceptor(),
+    new MediaUrlInterceptor(app.get(FileUploadService)),
+  );
 
   // Add global exception filter with logger
   app.useGlobalFilters(new GlobalExceptionFilter());

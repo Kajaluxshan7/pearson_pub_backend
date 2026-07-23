@@ -3,6 +3,26 @@ import { toZonedTime, fromZonedTime, format } from 'date-fns-tz';
 import { parseISO, isValid } from 'date-fns';
 import { LoggerService } from '../logger/logger.service';
 
+/**
+ * Storage contract for date/time values - keep these two rules distinct:
+ *
+ * 1. `timestamptz` columns (events, specials) hold true UTC instants. They are
+ *    converted to Toronto only for display, and parsed back on write via
+ *    `parseEventDateTime`, which is offset-aware and will not double-convert
+ *    a value the client already sent as UTC.
+ *
+ * 2. `time` columns (operation hours) hold LITERAL Toronto wall-clock time and
+ *    are never zone-converted anywhere in the stack. "We open at 11:00" is a
+ *    fact about the clock on the wall, not about an instant, so shifting it to
+ *    UTC would make opening hours drift across a DST boundary.
+ *
+ * Do not add helpers that convert `time` columns between zones.
+ *
+ * Note on date-fns-tz v3: `format(d, fmt, { timeZone })` does NOT convert the
+ * instant - it prints `d`'s local fields and uses `timeZone` only for zone-name
+ * tokens. The `toZonedTime(...)` + `format(..., { timeZone })` pairing below is
+ * therefore the correct idiom, not a double conversion.
+ */
 @Injectable()
 export class TimezoneService {
   private readonly logger = new LoggerService(TimezoneService.name);
@@ -380,70 +400,6 @@ export class TimezoneService {
       timeZone: this.TIMEZONE,
     });
     return `${startDateTime} to ${endDateTime}`;
-  }
-
-  /**
-   * Convert time-only string from Toronto timezone to UTC for storage
-   * This handles operation hours where we only store time, not full datetime
-   * @param timeString - Time string in HH:MM or HH:MM:SS format (assumed to be in Toronto time)
-   * @returns Time string in HH:MM format adjusted for UTC storage
-   */
-  convertTorontoTimeToUtcTime(timeString: string): string {
-    if (
-      !timeString ||
-      !/^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/.test(timeString)
-    ) {
-      throw new Error(
-        `Invalid time format. Expected HH:MM or HH:MM:SS, got: ${timeString}`,
-      );
-    }
-    // Build a Toronto-local datetime string for today and convert to UTC
-    const todayToronto = format(new Date(), 'yyyy-MM-dd', {
-      timeZone: this.TIMEZONE,
-    });
-    const torontoDateTime = `${todayToronto}T${timeString}`;
-    const parsed: Date = parseISO(torontoDateTime) as Date;
-    if (!isValid(parsed)) {
-      throw new Error(`Invalid datetime constructed: ${torontoDateTime}`);
-    }
-    const utcDate: Date = fromZonedTime(parsed as Date, this.TIMEZONE) as Date;
-
-    // Return HH:MM in UTC
-    return format(utcDate as Date, 'HH:mm', { timeZone: 'UTC' });
-  }
-
-  /**
-   * Convert time-only string from UTC to Toronto timezone for display
-   * @param timeString - Time string in HH:MM or HH:MM:SS format (stored as UTC)
-   * @returns Time string in HH:MM format in Toronto timezone
-   */
-  convertUtcTimeToTorontoTime(timeString: string): string {
-    if (
-      !timeString ||
-      !/^([01]?[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/.test(timeString)
-    ) {
-      throw new Error(
-        `Invalid time format. Expected HH:MM or HH:MM:SS, got: ${timeString}`,
-      );
-    }
-
-    // Normalize to HH:MM:SS format if needed
-    const normalizedTime =
-      timeString.includes(':') && timeString.split(':').length === 2
-        ? `${timeString}:00`
-        : timeString;
-
-    // Use the same reference date as the conversion method above
-    const today = format(new Date(), 'yyyy-MM-dd');
-
-    // Create UTC datetime using explicit UTC string format
-    const utcDateTimeString = `${today}T${normalizedTime}Z`;
-    const utcDateTime: Date = parseISO(utcDateTimeString);
-
-    // Convert from UTC to Toronto timezone
-    const torontoDateTime: Date = toZonedTime(utcDateTime, this.TIMEZONE);
-
-    return format(torontoDateTime, 'HH:mm');
   }
 
   /**

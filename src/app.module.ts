@@ -20,6 +20,7 @@ import { StoriesModule } from './stories/stories.module';
 import { TimezoneService } from './common/services/timezone.service';
 import { HealthController } from './common/health.controller';
 import { LoggerModule } from './common/logger/logger.module';
+import { FileUploadService } from './common/services/file-upload.service';
 
 @Module({
   imports: [
@@ -93,7 +94,7 @@ import { LoggerModule } from './common/logger/logger.module';
     StoriesModule,
   ],
   controllers: [AppController, HealthController],
-  providers: [AppService, TimezoneService],
+  providers: [AppService, TimezoneService, FileUploadService],
   exports: [TimezoneService],
 })
 export class AppModule {}

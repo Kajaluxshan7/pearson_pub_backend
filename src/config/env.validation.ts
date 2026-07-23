@@ -55,7 +55,16 @@ export const envValidationSchema = Joi.object({
   }),
 
   // Local storage configuration
-  APP_URL: Joi.string().uri().optional(),
+  APP_URL: Joi.when('NODE_ENV', {
+    is: 'production',
+    then: Joi.string().uri().pattern(/^https:\/\//).required().messages({
+      'any.required':
+        'APP_URL is required in production and must be the public backend URL',
+      'string.pattern.base':
+        'APP_URL must use HTTPS in production to prevent mixed-content failures',
+    }),
+    otherwise: Joi.string().uri().optional(),
+  }),
   UPLOAD_DIR: Joi.string().optional(),
 
   // AWS Configuration (no longer used — kept optional for migration script only)
